@@ -2424,3 +2424,29 @@ h1 {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Pied de page — droits d’auteur et indépendance du projet */
+.site-footer {
+  width: min(1380px, calc(100% - 32px));
+  margin: -10px auto 32px;
+  padding: 18px 12px 8px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.76rem;
+  line-height: 1.6;
+}
+
+.site-footer p {
+  margin: 0;
+}
+
+.site-footer p + p {
+  margin-top: 4px;
+}
+
+.site-footer-brand {
+  color: var(--text);
+  font-weight: 750;
+}
