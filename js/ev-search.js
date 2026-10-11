@@ -60,6 +60,74 @@
     "Spécial": 2
   };
 
+
+  // EV result labels are translated only for display. Stat keys, method values,
+  // region IDs, saved progress and ranking calculations remain unchanged.
+  const EV_TEXT_FR = {
+    noStat: "Sélectionne au moins un EV pour lancer l'analyse.",
+    noMethod: "Sélectionne au moins une méthode de rencontre.",
+    noUnlocked: "Le filtre « zones débloquées » est activé, mais aucune zone n'est cochée.",
+    selectZones: "Coche d'abord tes zones",
+    zone: "zone", zones: "zones", unlocked: "débloquée", unlockedPlural: "débloquées",
+    savedRegion: "tes choix sont mémorisés pour cette région.",
+    regionAll: "toutes les régions", progression: "Filtre progression",
+    period: "Période", season: "Saison", automatic: "Auto",
+    resultsFor: "pour", resultsIn: "dans", displayed: "affichée", displayedPlural: "affichées",
+    unlimited: "Aucune limite de résultats.",
+    percentageNote: "Le pourcentage représente la part d'espèces utiles, pas un taux de rencontre exact.",
+    empty: "Aucune zone correspondante avec ces filtres.",
+    usefulOrMixed: "espèces utiles ou mixtes", speciesMatch: "des espèces correspondent",
+    score: "score", pure: "utiles propres", mixed: "mixtes", parasites: "parasites",
+    species: "des espèces", usefulWeight: "poids utile",
+    good: "✓ Utile", mixedState: "⚠ Mixte", parasiteState: "✕ Parasite",
+    excellent: "Excellent", veryGood: "Très bon", goodScore: "Bon", fair: "Moyen",
+    poor: "Mauvais", veryPoor: "Très mauvais"
+  };
+  const EV_TEXT_EN = {
+    noStat: "Select at least one EV stat to start the analysis.",
+    noMethod: "Select at least one encounter method.",
+    noUnlocked: "The unlocked-area filter is enabled, but no areas are selected.",
+    selectZones: "Select your unlocked areas first",
+    zone: "area", zones: "areas", unlocked: "unlocked", unlockedPlural: "unlocked",
+    savedRegion: "your choices are saved for this region.",
+    regionAll: "all regions", progression: "Progress filter",
+    period: "Time of day", season: "Season", automatic: "Auto",
+    resultsFor: "for", resultsIn: "in", displayed: "shown", displayedPlural: "shown",
+    unlimited: "No result limit.",
+    percentageNote: "The percentage represents the share of useful species, not an exact encounter rate.",
+    empty: "No matching areas with these filters.",
+    usefulOrMixed: "useful or mixed species", speciesMatch: "of species match",
+    score: "score", pure: "pure useful", mixed: "mixed", parasites: "unwanted",
+    species: "of species", usefulWeight: "useful weight",
+    good: "✓ Useful", mixedState: "⚠ Mixed", parasiteState: "✕ Unwanted",
+    excellent: "Excellent", veryGood: "Very good", goodScore: "Good", fair: "Fair",
+    poor: "Poor", veryPoor: "Very poor"
+  };
+  const EN_METHODS = {
+    "Herbes": "Grass", "Herbes sombres": "Dark grass", "Grotte": "Cave",
+    "Surf": "Surf", "Canne": "Old Rod", "Super Canne": "Good Rod",
+    "Méga Canne": "Super Rod", "Horde": "Horde", "Leurre": "Lure",
+    "Coup de Boule": "Headbutt", "Arbre à Miel": "Honey tree",
+    "Rochers": "Rocks", "Nuage de poussière": "Dust cloud",
+    "Ombre": "Shadow", "Méthode inconnue": "Other"
+  };
+  const EN_RARITY = {
+    "Très commun": "Very common", "Commun": "Common", "Peu commun": "Uncommon",
+    "Rare": "Rare", "Très rare": "Very rare", "Horde": "Horde",
+    "Leurre": "Lure", "Spécial": "Special"
+  };
+  function evEnglish() { return window.DexI18n?.language === "en"; }
+  function evText(key) { return (evEnglish() ? EV_TEXT_EN : EV_TEXT_FR)[key] || key; }
+  function evStatLabel(stat) {
+    return evEnglish() ? (window.DexI18n?.pokemonTerm("ev", stat) || stat) : stat;
+  }
+  function evPokemonName(pokemon) {
+    return window.DexI18n?.pokemonName(pokemon) || pokemon.nom;
+  }
+  function evMethodLabel(method) { return evEnglish() ? (EN_METHODS[method] || method) : method; }
+  function evRarityLabel(rarity) { return evEnglish() ? (EN_RARITY[rarity] || rarity) : rarity; }
+  function countLabel(count) { return evText(count === 1 ? "zone" : "zones"); }
+
   let evRegion = "all";
 
   const EV_PERIOD_STORAGE_KEY = "pokemmoDexEvPeriodV1";
@@ -189,22 +257,17 @@
   }
 
   function seasonLabel(season) {
-    return {
-      spring: "Printemps",
-      summer: "Été",
-      autumn: "Automne",
-      winter: "Hiver",
-      all: "Toutes"
-    }[season] || season;
+    const labels = evEnglish()
+      ? { spring: "Spring", summer: "Summer", autumn: "Autumn", winter: "Winter", all: "All" }
+      : { spring: "Printemps", summer: "Été", autumn: "Automne", winter: "Hiver", all: "Toutes" };
+    return labels[season] || season;
   }
 
   function periodLabel(period) {
-    return {
-      morning: "Matin",
-      day: "Jour",
-      night: "Nuit",
-      all: "Toutes"
-    }[period] || period;
+    const labels = evEnglish()
+      ? { morning: "Morning", day: "Day", night: "Night", all: "All" }
+      : { morning: "Matin", day: "Jour", night: "Nuit", all: "Toutes" };
+    return labels[period] || period;
   }
 
   function effectiveSeason() {
@@ -245,16 +308,17 @@
     });
 
     const autoSeason = currentPokeSeasonFromBrowserDate();
-    const monthName = new Intl.DateTimeFormat("fr-FR", { month: "long" })
+    const monthName = new Intl.DateTimeFormat(evEnglish() ? "en-GB" : "fr-FR", { month: "long" })
       .format(new Date());
 
     if (evSeasonAuto) {
-      evSeasonAuto.textContent = `Auto : ${seasonLabel(autoSeason)}`;
+      evSeasonAuto.textContent = `${evText("automatic")} : ${seasonLabel(autoSeason)}`;
     }
 
     if (evSeasonAutoHelp) {
-      evSeasonAutoHelp.textContent =
-        `Date du PC : ${monthName} → saison estimée selon le calendrier des données : ${seasonLabel(autoSeason)}.`;
+      evSeasonAutoHelp.textContent = evEnglish()
+        ? `Device date: ${monthName} → estimated season according to the encounter-data calendar: ${seasonLabel(autoSeason)}.`
+        : `Date du PC : ${monthName} → saison estimée selon le calendrier des données : ${seasonLabel(autoSeason)}.`;
     }
   }
 
@@ -299,8 +363,7 @@
     const unlocked = currentUnlockedSet();
     const validCount = allZones.filter((zone) => unlocked.has(zone)).length;
 
-    evProgressCount.textContent =
-      `${validCount}/${allZones.length} zone${allZones.length > 1 ? "s" : ""}`;
+    evProgressCount.textContent = `${validCount}/${allZones.length} ${countLabel(allZones.length)}`;
   }
 
   function filterZoneChoices() {
@@ -343,7 +406,7 @@
 
     if (evUnlockedRegionLabel) {
       evUnlockedRegionLabel.textContent =
-        `${REGION_LABELS[evRegion] || evRegion} — tes choix sont mémorisés pour cette région.`;
+        `${REGION_LABELS[evRegion] || evRegion} — ${evText("savedRegion")}`;
     }
 
     evZoneSelectList.innerHTML = "";
@@ -632,12 +695,12 @@
   function usefulRatioLabel(ratio) {
     const percent = Math.round(ratio * 100);
 
-    if (percent >= 90) return "Excellent";
-    if (percent >= 75) return "Très bon";
-    if (percent >= 60) return "Bon";
-    if (percent >= 45) return "Moyen";
-    if (percent >= 25) return "Mauvais";
-    return "Très mauvais";
+    if (percent >= 90) return evText("excellent");
+    if (percent >= 75) return evText("veryGood");
+    if (percent >= 60) return evText("goodScore");
+    if (percent >= 45) return evText("fair");
+    if (percent >= 25) return evText("poor");
+    return evText("veryPoor");
   }
 
   function regionLabel(region) {
@@ -651,15 +714,15 @@
       .filter(([, value]) => Number(value) > 0)
       .map(([stat, value]) => {
         const wanted = selectedEvs().includes(stat);
-        return `<span${wanted ? ' class="wanted-ev"' : ""}>+${escapeHtml(value)} ${escapeHtml(stat)}</span>`;
+        return `<span${wanted ? ' class="wanted-ev"' : ""}>+${escapeHtml(value)} ${escapeHtml(evStatLabel(stat))}</span>`;
       })
       .join("");
   }
 
   function stateLabel(state) {
-    if (state === "useful") return "✓ Utile";
-    if (state === "mixed") return "⚠ Mixte";
-    return "✕ Parasite";
+    if (state === "useful") return evText("good");
+    if (state === "mixed") return evText("mixedState");
+    return evText("parasiteState");
   }
 
   function createZoneCard(group, rank) {
@@ -677,19 +740,19 @@
         <div class="ev-zone-title-row">
           <h3>${rank + 1}. ${escapeHtml(group.zone)}</h3>
           <span class="ev-zone-region">${escapeHtml(regionLabel(group.region))}</span>
-          <span class="ev-zone-method">${escapeHtml(group.method)}</span>
+          <span class="ev-zone-method">${escapeHtml(evMethodLabel(group.method))}</span>
         </div>
 
         <div class="ev-zone-meta">
-          <span>${group.relevant.length}/${group.totalSpecies} espèces utiles ou mixtes</span>
+          <span>${group.relevant.length}/${group.totalSpecies} ${evText("usefulOrMixed")}</span>
           <span>•</span>
-          <span>${relevantPercent}% des espèces correspondent</span>
+          <span>${relevantPercent}% ${evText("speciesMatch")}</span>
         </div>
       </div>
 
       <div class="ev-score-box">
         <span class="ev-stars">${starsFromUsefulRatio(group.usefulSpeciesRatio)}</span>
-        <span class="ev-score-label">${usefulRatioLabel(group.usefulSpeciesRatio)} · score ${Math.round(group.score)}</span>
+        <span class="ev-score-label">${usefulRatioLabel(group.usefulSpeciesRatio)} · ${evText("score")} ${Math.round(group.score)}</span>
       </div>
     `;
 
@@ -705,27 +768,27 @@
         <div class="ev-zone-stats">
           <div class="ev-stat-box good">
             <strong>${group.useful.length}</strong>
-            <span>utiles propres</span>
+            <span>${evText("pure")}</span>
           </div>
           <div class="ev-stat-box warn">
             <strong>${group.mixed.length}</strong>
-            <span>mixtes</span>
+            <span>${evText("mixed")}</span>
           </div>
           <div class="ev-stat-box bad">
             <strong>${group.parasites.length}</strong>
-            <span>parasites</span>
+            <span>${evText("parasites")}</span>
           </div>
           <div class="ev-stat-box">
             <strong>${relevantPercent}%</strong>
-            <span>des espèces</span>
+            <span>${evText("species")}</span>
           </div>
         </div>
 
         <div class="ev-breakdown">
           ${selectedEvs().map((ev) => `
             <span class="ev-breakdown-badge">
-              <strong>${ev}</strong>
-              <span>poids utile ${group.coverage[ev] ? group.coverage[ev].toFixed(1) : "0"}</span>
+              <strong>${escapeHtml(evStatLabel(ev))}</strong>
+              <span>${evText("usefulWeight")} ${group.coverage[ev] ? group.coverage[ev].toFixed(1) : "0"}</span>
             </span>
           `).join("")}
         </div>
@@ -753,7 +816,7 @@
         const button = document.createElement("button");
         button.type = "button";
         button.className = "ev-pokemon-link";
-        button.textContent = entry.pokemon.nom;
+        button.textContent = evPokemonName(entry.pokemon);
 
         button.addEventListener("click", () => {
           switchSearchMode("pokemon");
@@ -767,7 +830,7 @@
 
         const rarity = document.createElement("span");
         rarity.className = "ev-rarity";
-        rarity.textContent = entry.rarity || "—";
+        rarity.textContent = evRarityLabel(entry.rarity || "—");
 
         const state = document.createElement("span");
         state.className = `ev-row-state ${entry.state}`;
@@ -799,7 +862,7 @@
     const wanted = selectedEvs();
 
     if (!wanted.length) {
-      evSummary.textContent = "Sélectionne au moins un EV pour lancer l'analyse.";
+      evSummary.textContent = evText("noStat");
       evResults.innerHTML = "";
       return;
     }
@@ -807,7 +870,7 @@
     const methods = selectedMethods();
 
     if (!methods.size) {
-      evSummary.textContent = "Sélectionne au moins une méthode de rencontre.";
+      evSummary.textContent = evText("noMethod");
       evResults.innerHTML = "";
       return;
     }
@@ -817,7 +880,7 @@
     if (allowedZones && allowedZones.size === 0) {
       evSummary.innerHTML = `
         <span class="ev-progress-warning">
-          Le filtre « zones débloquées » est activé, mais aucune zone n'est cochée.
+          ${evText("noUnlocked")}
         </span>
       `;
       evResults.innerHTML = "";
@@ -834,26 +897,27 @@
       );
 
     const regionText = evRegion === "all"
-      ? "toutes les régions"
+      ? evText("regionAll")
       : regionLabel(evRegion);
 
     const progressionText = allowedZones
-      ? ` Filtre progression : <strong>${allowedZones.size} zone${allowedZones.size > 1 ? "s" : ""} débloquée${allowedZones.size > 1 ? "s" : ""}</strong>.`
+      ? ` ${evText("progression")} : <strong>${allowedZones.size} ${countLabel(allowedZones.size)} ${evText(allowedZones.size === 1 ? "unlocked" : "unlockedPlural")}</strong>.`
       : "";
 
     const seasonText = evSeasonMode === "auto"
-      ? `Auto (${seasonLabel(effectiveSeason())})`
+      ? `${evText("automatic")} (${seasonLabel(effectiveSeason())})`
       : seasonLabel(effectiveSeason());
 
+    const displayed = evText(groups.length === 1 ? "displayed" : "displayedPlural");
     evSummary.innerHTML = `
-      <strong>${groups.length}</strong> zone${groups.length > 1 ? "s" : ""}
-      affichée${groups.length > 1 ? "s" : ""} pour
-      <strong>${wanted.join(" + ")}</strong> dans <strong>${regionText}</strong>.
-      Période : <strong>${periodLabel(evPeriod)}</strong>.
-      Saison : <strong>${seasonText}</strong>.
+      <strong>${groups.length}</strong> ${countLabel(groups.length)} ${displayed} ${evText("resultsFor")}
+      <strong>${wanted.map((ev) => escapeHtml(evStatLabel(ev))).join(" + ")}</strong>
+      ${evText("resultsIn")} <strong>${escapeHtml(regionText)}</strong>.
+      ${evText("period")} : <strong>${periodLabel(evPeriod)}</strong>.
+      ${evText("season")} : <strong>${seasonText}</strong>.
       ${progressionText}
-      <strong>Aucune limite de résultats.</strong>
-      Le pourcentage représente la part d'espèces utiles, pas un taux de rencontre exact.
+      <strong>${evText("unlimited")}</strong>
+      ${evText("percentageNote")}
     `;
 
     evResults.innerHTML = "";
@@ -861,7 +925,7 @@
     if (!groups.length) {
       evResults.innerHTML = `
         <div class="ev-empty-results">
-          Aucune zone correspondante avec ces filtres.
+          ${evText("empty")}
         </div>
       `;
       return;
@@ -953,7 +1017,7 @@
       evUnlockedOnly.checked = false;
 
       if (evProgressCount) {
-        evProgressCount.textContent = "Coche d'abord tes zones";
+        evProgressCount.textContent = evText("selectZones");
         evProgressCount.classList.add("ev-progress-warning");
       }
 
@@ -1039,4 +1103,18 @@
   updateConditionControls();
   setEvRegion(evRegion);
   enforceSelectionLimit();
+
+  // Refresh existing EV cards when the visitor switches language.
+  // Recomputing the display does not alter selected filters or saved progress.
+  document.addEventListener("dex:languagechange", () => {
+    updateConditionControls();
+    if (evRegion !== "all") {
+      if (evUnlockedRegionLabel) {
+        evUnlockedRegionLabel.textContent =
+          `${REGION_LABELS[evRegion] || evRegion} — ${evText("savedRegion")}`;
+      }
+      updateProgressCount();
+    }
+    renderEvSearch();
+  });
 })();
