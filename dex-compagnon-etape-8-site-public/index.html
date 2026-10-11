@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Dex Compagnon : guide indépendant et non officiel pour consulter des fiches de Pokémon et des données communautaires." />
+  <title>Dex Compagnon — Guide indépendant</title>
+
+  <link rel="stylesheet" href="style.css" />
+
+</head>
+
+<body>
+  <main class="app-shell" id="appShell">
+    <section class="main-panel">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">OUTIL INDÉPENDANT</p>
+          <h1>Dex Compagnon</h1>
+        </div>
+
+        <span class="version">V1.9.4</span>
+      </header>
+
+      <section class="region-section">
+        <span class="section-label">Carte / région</span>
+
+        <div class="region-tabs" id="regionTabs">
+          <button class="region-btn active" data-region="all">Toutes</button>
+          <button class="region-btn" data-region="kanto">Kanto</button>
+          <button class="region-btn" data-region="hoenn">Hoenn</button>
+          <button class="region-btn" data-region="sinnoh">Sinnoh</button>
+          <button class="region-btn" data-region="unys">Unys</button>
+          <button class="region-btn" data-region="johto">Johto</button>
+        </div>
+      </section>
+
+      <section class="mode-section">
+        <span class="section-label">Recherche</span>
+        <div class="search-mode-tabs" id="searchModeTabs">
+          <button class="mode-btn active" type="button" data-mode="pokemon">Pokémon</button>
+          <button class="mode-btn" type="button" data-mode="trainer">Dresseurs</button>
+          <button class="mode-btn" type="button" data-mode="ev">Recherche EV</button>
+        </div>
+      </section>
+
+      <section class="search-section" id="pokemonSearchSection">
+        <label for="pokemonSearch">Rechercher un Pokémon</label>
+
+        <div class="search-wrap">
+          <input
+            id="pokemonSearch"
+            type="text"
+            autocomplete="off"
+            placeholder="Ex. Balignon, Magicarpe..."
+          />
+
+          <div class="suggestions hidden" id="suggestions"></div>
+        </div>
+
+        <p class="search-help">
+          Les suggestions se mettent à jour pendant la saisie.
+        </p>
+      </section>
+
+      <section class="search-section hidden" id="trainerSearchSection">
+        <label for="trainerSearch">Rechercher un dresseur important</label>
+
+        <div class="search-wrap">
+          <input
+            id="trainerSearch"
+            type="text"
+            autocomplete="off"
+            placeholder="Ex. Pierre, Cynthia, Peter..."
+          />
+          <div class="suggestions hidden" id="trainerSuggestions"></div>
+        </div>
+
+        <p class="search-help">
+          Champions d'Arène, Conseil 4, Maîtres, rivaux et dresseurs spéciaux.
+        </p>
+      </section>
+
+      <section class="ev-search-panel hidden" id="evSearchSection">
+        <div class="ev-search-head">
+          <div>
+            <span class="section-label">Optimisation EV</span>
+            <h2>Où entraîner mes EV ?</h2>
+            <p>
+              Choisis jusqu'à 3 EV. Les zones sont regroupées pour repérer celles
+              où tu peux enchaîner le plus de combats utiles.
+            </p>
+          </div>
+        </div>
+
+        <div class="ev-controls">
+          <div class="ev-control-block">
+            <strong>EV recherchés <span class="ev-limit-note">maximum 3</span></strong>
+
+            <div class="ev-checkbox-grid" id="evCheckboxGrid">
+              <label><input type="checkbox" value="PV"> <span>PV</span></label>
+              <label><input type="checkbox" value="Attaque"> <span>Attaque</span></label>
+              <label><input type="checkbox" value="Défense"> <span>Défense</span></label>
+              <label><input type="checkbox" value="Attaque Spéciale"> <span>Att. Spé.</span></label>
+              <label><input type="checkbox" value="Défense Spéciale"> <span>Déf. Spé.</span></label>
+              <label><input type="checkbox" value="Vitesse"> <span>Vitesse</span></label>
+            </div>
+          </div>
+
+          <div class="ev-options">
+            <label class="ev-option-check">
+              <input type="checkbox" id="avoidUnwantedEv" checked>
+              <span>
+                <strong>Éviter les EV non sélectionnés</strong>
+                <small>Pénalise fortement les Pokémon qui donnent aussi un EV parasite.</small>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="ev-filter-panel">
+          <div class="ev-filter-block">
+            <div class="ev-filter-title-row">
+              <strong>Région</strong>
+              <small>Filtre propre à la recherche EV</small>
+            </div>
+
+            <div class="ev-filter-chips" id="evRegionFilters">
+              <button type="button" class="ev-filter-chip active" data-ev-region="all">Toutes</button>
+              <button type="button" class="ev-filter-chip" data-ev-region="kanto">Kanto</button>
+              <button type="button" class="ev-filter-chip" data-ev-region="hoenn">Hoenn</button>
+              <button type="button" class="ev-filter-chip" data-ev-region="sinnoh">Sinnoh</button>
+              <button type="button" class="ev-filter-chip" data-ev-region="unys">Unys</button>
+              <button type="button" class="ev-filter-chip" data-ev-region="johto">Johto</button>
+            </div>
+          </div>
+
+          <div class="ev-filter-block">
+            <div class="ev-filter-title-row">
+              <strong>Méthodes de rencontre affichées</strong>
+
+              <div class="ev-filter-actions">
+                <button type="button" id="evMethodsAll">Tout</button>
+                <button type="button" id="evMethodsNone">Aucun</button>
+                <button type="button" id="evOldRodOnly">Canne uniquement</button>
+              </div>
+            </div>
+
+            <div class="ev-method-grid" id="evMethodFilters">
+              <label><input type="checkbox" value="Herbes" checked> <span>Herbes</span></label>
+              <label><input type="checkbox" value="Herbes sombres" checked> <span>Herbes sombres</span></label>
+              <label><input type="checkbox" value="Grotte" checked> <span>Grotte</span></label>
+              <label><input type="checkbox" value="Surf" checked> <span>Surf</span></label>
+              <label><input type="checkbox" value="Canne" checked> <span>Canne</span></label>
+              <label><input type="checkbox" value="Super Canne" checked> <span>Super Canne</span></label>
+              <label><input type="checkbox" value="Méga Canne" checked> <span>Méga Canne</span></label>
+              <label><input type="checkbox" value="Horde" checked> <span>Horde</span></label>
+              <label><input type="checkbox" value="Leurre" checked> <span>Leurre</span></label>
+              <label><input type="checkbox" value="Coup de Boule" checked> <span>Coup de Boule</span></label>
+              <label><input type="checkbox" value="Arbre à Miel" checked> <span>Arbre à Miel</span></label>
+              <label><input type="checkbox" value="Rochers" checked> <span>Rochers</span></label>
+              <label><input type="checkbox" value="Nuage de poussière" checked> <span>Nuage de poussière</span></label>
+              <label><input type="checkbox" value="Ombre" checked> <span>Ombre</span></label>
+              <label><input type="checkbox" value="Méthode inconnue" checked> <span>Autre</span></label>
+            </div>
+          </div>
+
+          <div class="ev-filter-block">
+            <div class="ev-filter-title-row">
+              <strong>Période et saison</strong>
+              <small>Les entrées générales restent valables avec les entrées Matin/Jour/Nuit ou saisonnières.</small>
+            </div>
+
+            <div class="ev-condition-grid">
+              <div class="ev-condition-group">
+                <span class="ev-condition-label">Période</span>
+
+                <div class="ev-filter-chips" id="evPeriodFilters">
+                  <button type="button" class="ev-filter-chip active" data-ev-period="all">Toutes</button>
+                  <button type="button" class="ev-filter-chip" data-ev-period="morning">Matin</button>
+                  <button type="button" class="ev-filter-chip" data-ev-period="day">Jour</button>
+                  <button type="button" class="ev-filter-chip" data-ev-period="night">Nuit</button>
+                </div>
+
+                <small class="ev-condition-help">
+                  L'heure du PC n'est pas utilisée pour filtrer les rencontres : sélectionnez la période manuellement.
+                </small>
+              </div>
+
+              <div class="ev-condition-group">
+                <span class="ev-condition-label">Saison</span>
+
+                <div class="ev-filter-chips" id="evSeasonFilters">
+                  <button type="button" class="ev-filter-chip active" data-ev-season="auto" id="evSeasonAuto">
+                    Auto
+                  </button>
+                  <button type="button" class="ev-filter-chip" data-ev-season="all">Toutes</button>
+                  <button type="button" class="ev-filter-chip" data-ev-season="spring">Printemps</button>
+                  <button type="button" class="ev-filter-chip" data-ev-season="summer">Été</button>
+                  <button type="button" class="ev-filter-chip" data-ev-season="autumn">Automne</button>
+                  <button type="button" class="ev-filter-chip" data-ev-season="winter">Hiver</button>
+                </div>
+
+                <small class="ev-condition-help" id="evSeasonAutoHelp">
+                  La saison automatique est calculée depuis la date locale de ton ordinateur.
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ev-progress-panel" id="evProgressPanel">
+          <div class="ev-progress-placeholder" id="evProgressPlaceholder">
+            Choisis une région précise pour configurer tes zones débloquées.
+          </div>
+
+          <div class="ev-progress-content hidden" id="evProgressContent">
+            <div class="ev-progress-head">
+              <label class="ev-progress-toggle">
+                <input type="checkbox" id="evUnlockedOnly">
+                <span>
+                  <strong>Uniquement mes zones débloquées</strong>
+                  <small id="evUnlockedRegionLabel">Progression enregistrée séparément pour chaque région.</small>
+                </span>
+              </label>
+
+              <span class="ev-progress-count" id="evProgressCount">0/0 zones</span>
+            </div>
+
+            <details class="ev-progress-details" id="evProgressDetails">
+              <summary>Choisir mes routes / emplacements accessibles</summary>
+
+              <div class="ev-progress-tools">
+                <input
+                  type="search"
+                  id="evZoneSearch"
+                  placeholder="Rechercher une route, une ville, une grotte..."
+                  autocomplete="off"
+                >
+
+                <div class="ev-filter-actions">
+                  <button type="button" id="evZonesAll">Tout cocher</button>
+                  <button type="button" id="evZonesNone">Tout décocher</button>
+                </div>
+              </div>
+
+              <div class="ev-zone-select-list" id="evZoneSelectList"></div>
+
+              <p class="ev-progress-help">
+                Tes choix sont mémorisés sur cet appareil. Ils ne modifient pas pokemon-data.js.
+              </p>
+            </details>
+          </div>
+        </div>
+
+        <div class="ev-search-summary" id="evSearchSummary">
+          Sélectionne au moins un EV pour lancer l'analyse.
+        </div>
+
+        <div class="ev-results" id="evResults"></div>
+      </section>
+
+      <section class="empty-state" id="emptyState">
+        <div class="empty-icon">?</div>
+        <h2>Choisis un Pokémon</h2>
+        <p>
+          Commence à taper son nom. Tu peux aussi cliquer sur un Pokémon épinglé.
+        </p>
+      </section>
+
+      <section class="empty-state hidden" id="trainerEmptyState">
+        <div class="empty-icon">D</div>
+        <h2>Choisis un dresseur</h2>
+        <p>
+          Recherche un Champion d'Arène, un membre du Conseil 4, un Maître,
+          un rival ou un dresseur spécial.
+        </p>
+      </section>
+
+      <article class="trainer-card hidden" id="trainerCard">
+        <header class="trainer-header">
+          <div>
+            <div class="trainer-badges">
+              <span class="trainer-category" id="trainerCategory"></span>
+              <span class="trainer-specialty" id="trainerSpecialty"></span>
+            </div>
+            <h2 id="trainerName"></h2>
+            <p class="english-name" id="trainerEnglishName"></p>
+          </div>
+        </header>
+
+        <div class="trainer-info-grid">
+          <div class="trainer-info-item">
+            <span>Région</span>
+            <strong id="trainerRegions"></strong>
+          </div>
+          <div class="trainer-info-item">
+            <span>Position</span>
+            <strong id="trainerPosition"></strong>
+          </div>
+        </div>
+
+        <p class="trainer-extra-info hidden" id="trainerExtraInfo"></p>
+
+        <section class="trainer-battles-section">
+          <div class="trainer-section-title">
+            <span class="section-label">Équipes enregistrées</span>
+            <h3>Combats</h3>
+          </div>
+          <div id="trainerBattles"></div>
+        </section>
+      </article>
+
+      <article class="pokemon-card hidden" id="pokemonCard">
+        <div class="pokemon-top pokemon-top-wide">
+          <div class="sprite-card">
+            <img id="pokemonSprite" alt="" />
+          </div>
+
+          <div class="pokemon-identity">
+            <span class="dex-number" id="dexNumber"></span>
+            <h2 id="pokemonName"></h2>
+
+            <div class="type-list" id="typeList"></div>
+
+            <div class="pokemon-status-list" id="pokemonStatusList"></div>
+
+            <p class="english-name" id="englishName"></p>
+          </div>
+
+          <!-- Utilise l'espace entre le nom du Pokémon et le bouton Épingler -->
+          <div class="combat-matchups">
+            <section class="matchup-box weakness-block">
+              <h3>Faiblesses</h3>
+              <div class="badge-list" id="weaknessList"></div>
+            </section>
+
+            <section class="matchup-box resistance-block">
+              <h3>Résistances</h3>
+              <div class="badge-list" id="resistanceList"></div>
+            </section>
+          </div>
+
+          <button class="pin-current-btn top-pin-btn" id="pinCurrentBtn" type="button">
+            📌 Épingler
+          </button>
+        </div>
+
+        <!-- Informations principales restantes -->
+        <div class="info-grid compact-info-grid">
+          <section class="info-block">
+            <h3>Immunités</h3>
+            <div class="badge-list" id="immunityList"></div>
+          </section>
+
+          <section class="info-block">
+            <h3>EV gagnés en combat</h3>
+            <div class="ev-yield-list" id="evYieldList">
+              <span class="muted">Non renseigné</span>
+            </div>
+          </section>
+        </div>
+
+        <!-- Détails : anciennement "Données enregistrées mais masquées" -->
+        <details class="collapsible-section" id="detailsPanel">
+          <summary>Détails</summary>
+
+          <div class="collapsible-content">
+            <div class="technical-grid" id="technicalData"></div>
+          </div>
+        </details>
+
+        <!-- Localisation placée sous Détails et désormais repliable -->
+        <details class="collapsible-section location-collapsible" id="locationPanel">
+          <summary>Localisation</summary>
+
+          <div class="collapsible-content">
+            <div class="location-heading">
+              <div>
+                <span class="section-label">Localisations disponibles</span>
+                <h3 id="locationTitle">Toutes les régions</h3>
+              </div>
+            </div>
+
+            <div id="locationList"></div>
+          </div>
+        </details>
+      </article>
+    </section>
+
+    <aside class="pins-panel">
+      <div class="pins-heading">
+        <div>
+          <p class="eyebrow">RACCOURCIS</p>
+          <h2>Pokémon épinglés</h2>
+        </div>
+
+        <span class="pin-count" id="pinCount">0 / 10</span>
+      </div>
+
+      <p class="pins-help">
+        Clique sur un Pokémon pour ouvrir directement sa fiche.
+      </p>
+
+      <div class="pin-list" id="pinList"></div>
+
+      <button class="clear-pins-btn" id="clearPinsBtn" type="button">
+        Vider les épingles
+      </button>
+    </aside>
+  </main>
+
+  <script src="data/pokemon-data.js"></script>
+  <script src="data/trainer-data.js"></script>
+  <script src="js/app.js"></script>
+
+  <script src="js/pokemon-status.js"></script>
+  <script src="js/trainer-app.js"></script>
+  <script src="js/ev-search.js"></script>
+</body>
+</html>
