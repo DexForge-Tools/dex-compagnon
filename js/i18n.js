@@ -506,9 +506,9 @@
     return language === "en" ? (pokemon.nom_en || pokemon.nom) : pokemon.nom;
   }
 
-  function pokemonTerm(category, value) {
+  function pokemonTerm(category, value, forceEnglish = false) {
     const text = String(value ?? "");
-    if (language !== "en") return text;
+    if (language !== "en" && !forceEnglish) return text;
     return pokemonTerms[category]?.[text] || text;
   }
 
@@ -779,6 +779,148 @@
     return language === "en" ? source.replace(/^Niveau\b/i, "Level") : source;
   }
 
+
+  // Trainer display translations. The original trainer-data.js values remain unchanged.
+  const trainerCategories = {
+    "Champion d'Arène": "Gym Leader", "Conseil 4": "Elite Four",
+    "Maître": "Champion", "Rival": "Rival", "Dresseur spécial": "Special Trainer",
+    "Team Rocket": "Team Rocket"
+  };
+  const trainerLocations = {
+    shared: { "Plusieurs lieux": "Multiple locations", "Plateau Indigo": "Indigo Plateau" },
+    kanto: { "Argenta": "Pewter City", "Safrania": "Saffron City", "Parmanie": "Fuchsia City",
+      "Cramois'Île": "Cinnabar Island" },
+    johto: { "Mauville": "Violet City", "Écorcia": "Azalea Town", "Doublonville": "Goldenrod City",
+      "Rosalia": "Ecruteak City", "Irisia": "Cianwood City", "Oliville": "Olivine City",
+      "Acajou": "Mahogany Town", "Ébènelle": "Blackthorn City", "Mont Argenté": "Mt. Silver" },
+    hoenn: { "Mérouville": "Rustboro City", "Myokara": "Dewford Town", "Lavandia": "Mauville City",
+      "Vermilava": "Lavaridge Town", "Cimetronelle": "Fortree City" },
+    sinnoh: { "Charbourg": "Oreburgh City", "Voilaroc": "Veilstone City",
+      "Unionpolis": "Hearthome City", "Frimapic": "Snowpoint City" },
+    unys: { "Maillard": "Nacrene City", "Volucité": "Castelia City", "Méanville": "Nimbasa City",
+      "Parsemille": "Mistralton City", "Janusia": "Opelucid City", "Vaguelone": "Undella Town" }
+  };
+  const trainerBattles = {
+    "Normal": "Normal", "Premier combat": "First battle", "Deuxieme combat": "Second battle",
+    "Troisieme combat": "Third battle", "Quatrieme combat": "Fourth battle",
+    "Cinquieme combat": "Fifth battle", "Sixieme combat": "Sixth battle",
+    "Septieme combat": "Seventh battle", "Deuxieme combat (Optionnel)": "Second battle (optional)",
+    "Equipe 1": "Team 1", "Equipe 2": "Team 2", "Revanche": "Rematch",
+    "Postgame": "Postgame", "Post Game": "Postgame", "Championne Gladys": "Gym Leader Candice",
+    "Vaguelone": "Undella Town"
+  };
+  const trainerBadges = {
+    "Badge Roche": "Boulder Badge", "Badge Cascade": "Cascade Badge",
+    "Badge Foudre": "Thunder Badge", "Badge Prisme": "Rainbow Badge",
+    "Badge Marais": "Marsh Badge", "Badge Ame": "Soul Badge",
+    "Badge Volcan": "Volcano Badge", "Badge Terre": "Earth Badge",
+    "Badge Pierre": "Stone Badge", "Badge Mine": "Mine Badge",
+    "Badge Legende": "Legend Badge"
+  };
+  const trainerMoves = {
+    "Séisme":"Earthquake", "Laser Glace":"Ice Beam", "Tonnerre":"Thunderbolt",
+    "Ball’Ombre":"Shadow Ball", "Mâchouille":"Crunch", "Psyko":"Psychic", "Force":"Strength",
+    "Lance-Flammes":"Flamethrower", "Vive-Attaque":"Quick Attack", "Charge":"Tackle",
+    "Lame de Roc":"Stone Edge", "Demi-Tour":"U-turn", "Toxik":"Toxic",
+    "Casse-Brique":"Brick Break", "Repos":"Rest", "Onde de Choc":"Shock Wave",
+    "Giga-Sangsue":"Giga Drain", "Soin":"Recover", "Ébullition":"Scald",
+    "Morsure":"Bite", "Vibraqua":"Water Pulse", "Aéropique":"Aerial Ace",
+    "Atterrissage":"Roost", "Draco-Griffe":"Dragon Claw", "Cascade":"Waterfall",
+    "Éboulement":"Rock Slide", "Draco-Choc":"Dragon Pulse", "Puissance Cachée":"Hidden Power",
+    "Bombe Beurk":"Sludge Bomb", "Nœud Herbe":"Grass Knot", "Exploforce":"Focus Blast",
+    "Vengeance":"Retaliate", "Cage Éclair":"Thunder Wave", "Déflagration":"Fire Blast",
+    "Feu Follet":"Will-O-Wisp", "Poing Glace":"Ice Punch", "Rugissement":"Growl",
+    "Tornade":"Gust", "Éco-Sphère":"Energy Ball", "Surpuissance":"Superpower",
+    "Poing Éclair":"Thunder Punch", "Choc Psy":"Psyshock", "Poudre Dodo":"Sleep Powder",
+    "Bluff":"Fake Out", "Lame d’Air":"Air Slash", "Piétisol":"Bulldoze",
+    "Tunnelier":"Dig", "Luminocanon":"Flash Cannon", "Rafale Psy":"Psybeam",
+    "Telluriforce":"Earth Power", "Griffe Ombre":"Shadow Claw", "Rapace":"Brave Bird",
+    "Psykoud’Boul":"Zen Headbutt", "Éclair Fou":"Wild Charge", "Boule Roc":"Rock Blast",
+    "Vent Violent":"Hurricane", "Coup Bas":"Sucker Punch", "Poing Feu":"Fire Punch",
+    "Crocs Givre":"Ice Fang", "Plaquage":"Body Slam", "Tricherie":"Foul Play",
+    "Cru-Ailes":"Wing Attack", "Double Pied":"Double Kick", "Hydro-Queue":"Aqua Tail",
+    "Gyroballe":"Gyro Ball", "Façade":"Facade", "Acrobatie":"Acrobatics",
+    "Change Éclair":"Volt Switch", "Crocs Feu":"Fire Fang", "Marto-Poing":"Hammer Arm",
+    "Météores":"Swift", "Choc Venin":"Venoshock", "Vitesse Extrême":"Extreme Speed",
+    "Piège de Roc":"Stealth Rock", "Mégacorne":"Megahorn", "Blabla Dodo":"Sleep Talk",
+    "Tempête Verte":"Leaf Storm", "Bélier":"Take Down", "Boutefeu":"Flare Blitz",
+    "Châtiment":"Hex", "Tomberoche":"Rock Tomb", "Rayon Signal":"Signal Beam",
+    "Vibrobscur":"Dark Pulse", "Canicule":"Heat Wave", "Balayage":"Low Kick",
+    "Pied Voltige":"High Jump Kick", "Griffe":"Scratch", "Ombre Nocturne":"Night Shade",
+    "Blizzard":"Blizzard", "Queue de Fer":"Iron Tail", "Martobois":"Wood Hammer",
+    "Vampi-Poing":"Drain Punch", "Direct Toxik":"Poison Jab", "Mimi-Queue":"Tail Whip",
+    "Ouragan":"Twister", "Éclate-Roc":"Rock Smash", "Crocs Éclair":"Thunder Fang",
+    "Pisto-Poing":"Bullet Punch", "Exuviation":"Shell Smash", "Abri":"Protect",
+    "Frappe Atlas":"Seismic Toss", "Miroi-Tir":"Mirror Shot", "Choc Mental":"Confusion",
+    "Picpic":"Peck", "Koud’Korne":"Horn Attack", "Vague Psy":"Psywave",
+    "Onde Folie":"Confuse Ray", "Draco-Souffle":"Dragon Breath"
+  };
+  const trainerItems = {
+    "Orbe Vie":"Life Orb", "Baie Sitrus":"Sitrus Berry", "Restes":"Leftovers",
+    "Herbeblanche":"White Herb", "Baie Maron":"Chesto Berry", "Baie Oran":"Oran Berry",
+    "Baie Jouca":"Shuca Berry", "Casque Brut":"Rocky Helmet",
+    "Ballon":"Air Balloon", "Ceinture Pro":"Expert Belt", "Orbe Flamme":"Flame Orb",
+    "Orbe Toxique":"Toxic Orb", "Boue Noire":"Black Sludge", "Carton Rouge":"Red Card",
+    "Bouton Fuite":"Eject Button", "Eau Mystique":"Mystic Water", "Aimant":"Magnet",
+    "Loupe":"Wide Lens", "Ballelumière":"Light Ball", "Baie Prine":"Lum Berry",
+    "Herbe Pouv.":"Power Herb", "Baie Lichii":"Liechi Berry"
+  };
+  const trainerTextFr = {
+    "trainer.englishName": "Nom anglais", "trainer.frenchName": "Nom français",
+    "trainer.important": "Dresseur important", "trainer.varied": "Varié",
+    "trainer.noPosition": "Non renseignée", "trainer.badge": "Badge",
+    "trainer.gym": "Arène", "trainer.order": "Ordre", "trainer.type": "Type",
+    "trainer.noMatch": "Aucun dresseur ne correspond à cette recherche et ces filtres.",
+    "trainer.noTeamTitle": "Équipe non synchronisée",
+    "trainer.noTeamBody": "Aucune équipe détaillée n'est disponible pour ce dresseur dans les données publiées.",
+    "trainer.noBattleTeam": "Aucune équipe détaillée disponible.",
+    "trainer.battle": "Combat", "trainer.level": "Niv.",
+    "trainer.moves": "Attaques", "trainer.ability": "Talent", "trainer.item": "Objet"
+  };
+  const trainerTextEn = {
+    "trainer.englishName": "English name", "trainer.frenchName": "French name",
+    "trainer.important": "Notable Trainer", "trainer.varied": "Various",
+    "trainer.noPosition": "Not available", "trainer.badge": "Badge",
+    "trainer.gym": "Gym", "trainer.order": "Order", "trainer.type": "Type",
+    "trainer.noMatch": "No trainer matches this search and the selected filters.",
+    "trainer.noTeamTitle": "Team not synchronized",
+    "trainer.noTeamBody": "No detailed team is available for this trainer in the published data.",
+    "trainer.noBattleTeam": "No detailed team available.",
+    "trainer.battle": "Battle", "trainer.level": "Lv.",
+    "trainer.moves": "Moves", "trainer.ability": "Ability", "trainer.item": "Item"
+  };
+  function trainerText(key) {
+    return (language === "en" ? trainerTextEn : trainerTextFr)[key] || key;
+  }
+  function trainerCategory(value, forceEnglish = false) {
+    const raw = String(value ?? "");
+    return language === "en" || forceEnglish ? raw.split(" / ").map(part => trainerCategories[part] || part).join(" / ") : raw;
+  }
+  function trainerLocation(region, value, forceEnglish = false) {
+    const raw = String(value ?? "");
+    if ((!forceEnglish && language !== "en") || !raw) return raw;
+    return raw.split(" / ").map(part =>
+      trainerLocations[region]?.[part] || trainerLocations.shared[part] ||
+      locationNames[region]?.[part] || locationNames.shared[part] || part
+    ).join(" / ");
+  }
+  function trainerBattle(value) {
+    const raw = String(value ?? "");
+    return language === "en" ? (trainerBattles[raw] || raw) : raw;
+  }
+  function trainerBadge(value) {
+    const raw = String(value ?? "");
+    return language === "en" ? (trainerBadges[raw] || raw) : raw;
+  }
+  function trainerMove(value) {
+    const raw = String(value ?? "");
+    return language === "en" ? (trainerMoves[raw] || raw) : raw;
+  }
+  function trainerItem(value) {
+    const raw = String(value ?? "");
+    return language === "en" ? (trainerItems[raw] || raw) : raw;
+  }
+
   window.DexI18n = Object.freeze({
     get language() { return language; },
     t: translate,
@@ -791,6 +933,7 @@
     locationMethod,
     locationRarity,
     locationLevel,
+    trainerText, trainerCategory, trainerLocation, trainerBattle, trainerBadge, trainerMove, trainerItem,
     setLanguage,
     applyLanguage
   });

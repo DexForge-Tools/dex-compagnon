@@ -71,6 +71,25 @@ function trainerMatchesFilters(trainer) {
     trainerGymMatches(trainer);
 }
 
+function trText(key) {
+  return window.DexI18n?.trainerText?.(key) || key;
+}
+function trainerDisplayName(trainer) {
+  return window.DexI18n?.language === "en"
+    ? (trainer.nom_en || trainer.nom || trText("trainer.important"))
+    : (trainer.nom || trainer.nom_en || trText("trainer.important"));
+}
+function trainerDisplayCategory(value) {
+  return window.DexI18n?.trainerCategory?.(value) || value || "";
+}
+function trainerDisplaySpecialty(value) {
+  return window.DexI18n?.pokemonTerm?.("type", value) || value || "";
+}
+function trainerDisplayLocation(trainer) {
+  const region = (trainer.regions || [])[0] || "";
+  return window.DexI18n?.trainerLocation?.(region, trainer.position) || trainer.position || "";
+}
+
 function trainerNames(trainer) {
   return [
     trainer.nom,
@@ -92,9 +111,13 @@ function trainerSearchTerms(trainer) {
     ...(trainer.aliases || []),
     ...regions,
     trainer.position,
+    window.DexI18n?.trainerLocation?.((trainer.regions || [])[0] || "", trainer.position, true),
     trainer.categorie,
+    window.DexI18n?.trainerCategory?.(trainer.categorie, true),
     trainer.specialite,
+    window.DexI18n?.pokemonTerm?.("type", trainer.specialite, true),
     trainer.badge,
+    window.DexI18n?.trainerBadge?.(trainer.badge),
     ...(trainer.tags || [])
   ];
 
@@ -194,19 +217,19 @@ function trainerMatchReason(trainer, value) {
     q.includes(`gym${trainer.numero_arene}`) ||
     trainerGymFilter !== "all"
   )) {
-    return `Arène ${trainer.numero_arene}`;
+    return `${trText("trainer.gym")} ${trainer.numero_arene}`;
   }
 
   if (value && normalizeText(trainer.position || "").includes(q)) {
-    return trainer.position;
+    return trainerDisplayLocation(trainer);
   }
 
   if (value && normalizeText(trainer.specialite || "").includes(q)) {
-    return `Type ${trainer.specialite}`;
+    return `${trText("trainer.type")} ${trainerDisplaySpecialty(trainer.specialite)}`;
   }
 
-  if (trainer.numero_arene) return `Arène ${trainer.numero_arene}`;
-  return trainer.specialite || trainer.categorie || "";
+  if (trainer.numero_arene) return `${trText("trainer.gym")} ${trainer.numero_arene}`;
+  return trainerDisplaySpecialty(trainer.specialite) || trainerDisplayCategory(trainer.categorie) || "";
 }
 
 function renderTrainerSuggestions() {
@@ -226,7 +249,7 @@ function renderTrainerSuggestions() {
   if (matches.length === 0) {
     trainerSuggestionsBox.innerHTML = `
       <div class="no-suggestion">
-        Aucun dresseur ne correspond à cette recherche et ces filtres.
+        ${escapeHtml(trText("trainer.noMatch"))}
       </div>
     `;
     trainerSuggestionsBox.classList.remove("hidden");
@@ -244,17 +267,17 @@ function renderTrainerSuggestions() {
       .join(", ");
 
     const categoryLine = [
-      trainer.categorie,
-      trainer.numero_arene ? `Arène ${trainer.numero_arene}` : "",
-      trainer.specialite
+      trainerDisplayCategory(trainer.categorie),
+      trainer.numero_arene ? `${trText("trainer.gym")} ${trainer.numero_arene}` : "",
+      trainerDisplaySpecialty(trainer.specialite)
     ].filter(Boolean).join(" · ");
 
-    const placeLine = [trainer.position, regions].filter(Boolean).join(" · ");
+    const placeLine = [trainerDisplayLocation(trainer), regions].filter(Boolean).join(" · ");
     const reason = trainerMatchReason(trainer, value);
 
     button.innerHTML = `
       <span>
-        <strong>${escapeHtml(trainer.nom)}</strong>
+        <strong>${escapeHtml(trainerDisplayName(trainer))}</strong>
         <small>${escapeHtml(categoryLine)}</small>
       </span>
       <span class="trainer-suggestion-meta">
@@ -276,7 +299,7 @@ function getTrainerBySlug(slug) {
 
 function selectTrainer(trainer) {
   currentTrainer = trainer;
-  trainerSearchInput.value = trainer.nom;
+  trainerSearchInput.value = trainerDisplayName(trainer);
   trainerSuggestionsBox.classList.add("hidden");
   renderTrainer(trainer);
 }
@@ -285,23 +308,23 @@ function renderTrainer(trainer) {
   trainerEmptyState.classList.add("hidden");
   trainerCard.classList.remove("hidden");
 
-  trainerNameEl.textContent = trainer.nom || trainer.nom_en || "Dresseur";
-  trainerEnglishNameEl.textContent =
-    trainer.nom_en && trainer.nom_en !== trainer.nom
-      ? `Nom anglais : ${trainer.nom_en}`
-      : "";
+  trainerNameEl.textContent = trainerDisplayName(trainer);
+  const english = window.DexI18n?.language === "en";
+  const alternativeName = english ? trainer.nom : trainer.nom_en;
+  trainerEnglishNameEl.textContent = alternativeName && trainer.nom_en !== trainer.nom
+    ? `${trText(english ? "trainer.frenchName" : "trainer.englishName")} : ${alternativeName}` : "";
 
-  trainerCategoryEl.textContent = trainer.categorie || "Dresseur important";
-  trainerSpecialtyEl.textContent = trainer.specialite || "Varié";
+  trainerCategoryEl.textContent = trainerDisplayCategory(trainer.categorie) || trText("trainer.important");
+  trainerSpecialtyEl.textContent = trainerDisplaySpecialty(trainer.specialite) || trText("trainer.varied");
   trainerRegionsEl.textContent = (trainer.regions || [])
     .map((region) => window.DexI18n?.regionLabel?.(region) || REGIONS[region] || region)
-    .join(", ") || "Non renseignée";
-  trainerPositionEl.textContent = trainer.position || "Non renseignée";
+    .join(", ") || trText("trainer.noPosition");
+  trainerPositionEl.textContent = trainerDisplayLocation(trainer) || trText("trainer.noPosition");
 
   const extras = [];
-  if (trainer.badge) extras.push(`Badge : ${trainer.badge}`);
-  if (trainer.numero_arene) extras.push(`Arène n°${trainer.numero_arene}`);
-  if (trainer.ordre) extras.push(`Ordre : ${trainer.ordre}`);
+  if (trainer.badge) extras.push(`${trText("trainer.badge")} : ${window.DexI18n?.trainerBadge?.(trainer.badge) || trainer.badge}`);
+  if (trainer.numero_arene) extras.push(`${trText("trainer.gym")} n°${trainer.numero_arene}`);
+  if (trainer.ordre) extras.push(`${trText("trainer.order")} : ${trainer.ordre}`);
 
   trainerExtraInfoEl.textContent = extras.join(" · ");
   trainerExtraInfoEl.classList.toggle("hidden", extras.length === 0);
@@ -317,8 +340,8 @@ function renderTrainerBattles(trainer) {
   if (combats.length === 0) {
     trainerBattlesEl.innerHTML = `
       <div class="trainer-no-team">
-        <strong>Équipe non synchronisée</strong>
-        <span>Aucune équipe détaillée n'est disponible pour ce dresseur dans les données publiées.</span>
+        <strong>${escapeHtml(trText("trainer.noTeamTitle"))}</strong>
+        <span>${escapeHtml(trText("trainer.noTeamBody"))}</span>
       </div>
     `;
     return;
@@ -331,7 +354,7 @@ function renderTrainerBattles(trainer) {
 
     const summary = document.createElement("summary");
     summary.innerHTML = `
-      <span>${escapeHtml(combat.nom || `Combat ${index + 1}`)}</span>
+      <span>${escapeHtml(window.DexI18n?.trainerBattle?.(combat.nom || `${trText("trainer.battle")} ${index + 1}`) || combat.nom)}</span>
       <span class="battle-team-count">${(combat.equipe || []).length} Pokémon</span>
     `;
     details.appendChild(summary);
@@ -344,7 +367,7 @@ function renderTrainerBattles(trainer) {
     });
 
     if (!(combat.equipe || []).length) {
-      team.innerHTML = `<span class="muted">Aucune équipe détaillée disponible.</span>`;
+      team.innerHTML = `<span class="muted">${escapeHtml(trText("trainer.noBattleTeam"))}</span>`;
     }
 
     details.appendChild(team);
@@ -365,7 +388,9 @@ function createTrainerPokemonCard(member) {
     );
 
   const id = Number(pokemon?.id || member.pokemon_id);
-  const displayName = pokemon?.nom || member.nom || "Pokémon";
+  const displayName = pokemon
+    ? (window.DexI18n?.pokemonName?.(pokemon) || pokemon.nom)
+    : (window.DexI18n?.language === "en" ? member.nom_en || member.nom : member.nom) || "Pokémon";
   const sprite = Number.isSafeInteger(id) && id > 0 && id <= 20000
     ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`
     : "";
@@ -382,22 +407,22 @@ function createTrainerPokemonCard(member) {
 
       <div class="trainer-pokemon-identity">
         <button class="trainer-pokemon-link" type="button">${escapeHtml(displayName)}</button>
-        <span class="trainer-level">${member.niveau ? `Niv. ${escapeHtml(member.niveau)}` : ""}</span>
+        <span class="trainer-level">${member.niveau ? `${escapeHtml(trText("trainer.level"))} ${escapeHtml(member.niveau)}` : ""}</span>
         <div class="trainer-type-row">
-          ${types.map((type) => `<span class="type-badge">${escapeHtml(type)}</span>`).join("")}
+          ${types.map((type) => `<span class="type-badge">${escapeHtml(window.DexI18n?.pokemonTerm?.("type", type) || type)}</span>`).join("")}
         </div>
       </div>
     </div>
 
     <div class="trainer-member-details">
       ${member.attaques?.length ? `
-        <div><strong>Attaques</strong><span>${escapeHtml(member.attaques.join(" · "))}</span></div>
+        <div><strong>${escapeHtml(trText("trainer.moves"))}</strong><span>${escapeHtml(member.attaques.map((attack) => window.DexI18n?.trainerMove?.(attack) || attack).join(" · "))}</span></div>
       ` : ""}
       ${member.talent ? `
-        <div><strong>Talent</strong><span>${escapeHtml(member.talent)}</span></div>
+        <div><strong>${escapeHtml(trText("trainer.ability"))}</strong><span>${escapeHtml(window.DexI18n?.pokemonTerm?.("ability", member.talent) || member.talent)}</span></div>
       ` : ""}
       ${member.objet ? `
-        <div><strong>Objet</strong><span>${escapeHtml(member.objet)}</span></div>
+        <div><strong>${escapeHtml(trText("trainer.item"))}</strong><span>${escapeHtml(window.DexI18n?.trainerItem?.(member.objet) || member.objet)}</span></div>
       ` : ""}
     </div>
   `;
@@ -585,12 +610,22 @@ regionTabs.addEventListener("click", () => {
   }
 });
 
-// Refresh the geographic labels of an already open trainer, without changing its data.
+// Re-render existing trainer details in place and preserve expanded battle panels.
 document.addEventListener("dex:languagechange", () => {
-  if (currentTrainer && !trainerCard.classList.contains("hidden")) {
-    trainerRegionsEl.textContent = (currentTrainer.regions || [])
-      .map((region) => window.DexI18n?.regionLabel?.(region) || REGIONS[region] || region)
-      .join(", ") || "Non renseignée";
+  if (currentTrainer) {
+    const names = trainerNames(currentTrainer).map(normalizeText);
+    if (names.includes(normalizeText(trainerSearchInput.value))) {
+      trainerSearchInput.value = trainerDisplayName(currentTrainer);
+    }
+    if (!trainerCard.classList.contains("hidden")) {
+      const expanded = [...trainerBattlesEl.querySelectorAll("details")]
+        .map((panel, index) => panel.open ? index : -1)
+        .filter(index => index >= 0);
+      renderTrainer(currentTrainer);
+      trainerBattlesEl.querySelectorAll("details").forEach((panel, index) => {
+        panel.open = expanded.includes(index);
+      });
+    }
   }
   if (!trainerSuggestionsBox.classList.contains("hidden")) renderTrainerSuggestions();
 });
