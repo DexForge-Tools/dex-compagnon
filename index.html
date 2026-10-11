@@ -15,18 +15,27 @@
     <section class="main-panel">
       <header class="app-header">
         <div>
-          <p class="eyebrow">OUTIL INDÉPENDANT</p>
+          <p class="eyebrow" data-i18n="brand.eyebrow">OUTIL INDÉPENDANT</p>
           <h1>Dex Compagnon</h1>
         </div>
 
-        <span class="version">V1.9.5</span>
+        <div class="header-actions">
+          <label class="language-picker" for="languageSelect">
+            <span class="visually-hidden" data-i18n="language.label">Langue</span>
+            <select id="languageSelect" aria-label="Langue" data-i18n-aria-label="language.label">
+              <option value="fr">🇫🇷 Français</option>
+              <option value="en">🇬🇧 English</option>
+            </select>
+          </label>
+          <span class="version">V2.0 β2</span>
+        </div>
       </header>
 
       <section class="region-section">
-        <span class="section-label">Carte / région</span>
+        <span class="section-label" data-i18n="section.region">Carte / région</span>
 
         <div class="region-tabs" id="regionTabs">
-          <button class="region-btn active" data-region="all">Toutes</button>
+          <button class="region-btn active" data-region="all" data-i18n="common.all">Toutes</button>
           <button class="region-btn" data-region="kanto">Kanto</button>
           <button class="region-btn" data-region="hoenn">Hoenn</button>
           <button class="region-btn" data-region="sinnoh">Sinnoh</button>
@@ -36,47 +45,47 @@
       </section>
 
       <section class="mode-section">
-        <span class="section-label">Recherche</span>
+        <span class="section-label" data-i18n="section.search">Recherche</span>
         <div class="search-mode-tabs" id="searchModeTabs">
           <button class="mode-btn active" type="button" data-mode="pokemon">Pokémon</button>
-          <button class="mode-btn" type="button" data-mode="trainer">Dresseurs</button>
-          <button class="mode-btn" type="button" data-mode="ev">Recherche EV</button>
+          <button class="mode-btn" type="button" data-mode="trainer" data-i18n="mode.trainers">Dresseurs</button>
+          <button class="mode-btn" type="button" data-mode="ev" data-i18n="mode.ev">Recherche EV</button>
         </div>
       </section>
 
       <section class="search-section" id="pokemonSearchSection">
-        <label for="pokemonSearch">Rechercher un Pokémon</label>
+        <label for="pokemonSearch" data-i18n="pokemon.search">Rechercher un Pokémon</label>
 
         <div class="search-wrap">
           <input
             id="pokemonSearch"
             type="text"
             autocomplete="off"
-            placeholder="Ex. Magicarpe, Pikachu, 25 ou #025..."
+            data-i18n-placeholder="pokemon.placeholder" placeholder="Ex. Magicarpe, Pikachu, 25 ou #025..."
           />
 
           <div class="suggestions hidden" id="suggestions"></div>
         </div>
 
-        <p class="search-help">
+        <p class="search-help" data-i18n="pokemon.help">
           Recherche par nom français, nom anglais ou numéro du Pokédex.
         </p>
       </section>
 
       <section class="search-section hidden" id="trainerSearchSection">
-        <label for="trainerSearch">Rechercher un dresseur important</label>
+        <label for="trainerSearch" data-i18n="trainer.search">Rechercher un dresseur important</label>
 
         <div class="search-wrap">
           <input
             id="trainerSearch"
             type="text"
             autocomplete="off"
-            placeholder="Ex. Pierre, Cynthia, Peter..."
+            data-i18n-placeholder="trainer.placeholder" placeholder="Ex. Pierre, Cynthia, Peter..."
           />
           <div class="suggestions hidden" id="trainerSuggestions"></div>
         </div>
 
-        <p class="search-help">
+        <p class="search-help" data-i18n="trainer.help">
           Champions d'Arène, Conseil 4, Maîtres, rivaux et dresseurs spéciaux.
         </p>
       </section>
@@ -84,9 +93,9 @@
       <section class="ev-search-panel hidden" id="evSearchSection">
         <div class="ev-search-head">
           <div>
-            <span class="section-label">Optimisation EV</span>
-            <h2>Où entraîner mes EV ?</h2>
-            <p>
+            <span class="section-label" data-i18n="ev.title">Optimisation EV</span>
+            <h2 data-i18n="ev.heading">Où entraîner mes EV ?</h2>
+            <p data-i18n="ev.intro">
               Choisis jusqu'à 3 EV. Les zones sont regroupées pour repérer celles
               où tu peux enchaîner le plus de combats utiles.
             </p>
@@ -95,15 +104,15 @@
 
         <div class="ev-controls">
           <div class="ev-control-block">
-            <strong>EV recherchés <span class="ev-limit-note">maximum 3</span></strong>
+            <strong><span data-i18n="ev.requested">EV recherchés</span> <span class="ev-limit-note" data-i18n="ev.max">maximum 3</span></strong>
 
             <div class="ev-checkbox-grid" id="evCheckboxGrid">
-              <label><input type="checkbox" value="PV"> <span>PV</span></label>
-              <label><input type="checkbox" value="Attaque"> <span>Attaque</span></label>
-              <label><input type="checkbox" value="Défense"> <span>Défense</span></label>
-              <label><input type="checkbox" value="Attaque Spéciale"> <span>Att. Spé.</span></label>
-              <label><input type="checkbox" value="Défense Spéciale"> <span>Déf. Spé.</span></label>
-              <label><input type="checkbox" value="Vitesse"> <span>Vitesse</span></label>
+              <label><input type="checkbox" value="PV"> <span data-i18n="stat.hp">PV</span></label>
+              <label><input type="checkbox" value="Attaque"> <span data-i18n="stat.attack">Attaque</span></label>
+              <label><input type="checkbox" value="Défense"> <span data-i18n="stat.defense">Défense</span></label>
+              <label><input type="checkbox" value="Attaque Spéciale"> <span data-i18n="stat.spattack">Att. Spé.</span></label>
+              <label><input type="checkbox" value="Défense Spéciale"> <span data-i18n="stat.spdefense">Déf. Spé.</span></label>
+              <label><input type="checkbox" value="Vitesse"> <span data-i18n="stat.speed">Vitesse</span></label>
             </div>
           </div>
 
@@ -111,8 +120,8 @@
             <label class="ev-option-check">
               <input type="checkbox" id="avoidUnwantedEv" checked>
               <span>
-                <strong>Éviter les EV non sélectionnés</strong>
-                <small>Pénalise fortement les Pokémon qui donnent aussi un EV parasite.</small>
+                <strong data-i18n="ev.avoid">Éviter les EV non sélectionnés</strong>
+                <small data-i18n="ev.avoidHelp">Pénalise fortement les Pokémon qui donnent aussi un EV parasite.</small>
               </span>
             </label>
           </div>
@@ -121,12 +130,12 @@
         <div class="ev-filter-panel">
           <div class="ev-filter-block">
             <div class="ev-filter-title-row">
-              <strong>Région</strong>
-              <small>Filtre propre à la recherche EV</small>
+              <strong data-i18n="common.region">Région</strong>
+              <small data-i18n="ev.regionHelp">Filtre propre à la recherche EV</small>
             </div>
 
             <div class="ev-filter-chips" id="evRegionFilters">
-              <button type="button" class="ev-filter-chip active" data-ev-region="all">Toutes</button>
+              <button type="button" class="ev-filter-chip active" data-ev-region="all" data-i18n="common.all">Toutes</button>
               <button type="button" class="ev-filter-chip" data-ev-region="kanto">Kanto</button>
               <button type="button" class="ev-filter-chip" data-ev-region="hoenn">Hoenn</button>
               <button type="button" class="ev-filter-chip" data-ev-region="sinnoh">Sinnoh</button>
@@ -137,68 +146,68 @@
 
           <div class="ev-filter-block">
             <div class="ev-filter-title-row">
-              <strong>Méthodes de rencontre affichées</strong>
+              <strong data-i18n="ev.methods">Méthodes de rencontre affichées</strong>
 
               <div class="ev-filter-actions">
-                <button type="button" id="evMethodsAll">Tout</button>
-                <button type="button" id="evMethodsNone">Aucun</button>
-                <button type="button" id="evOldRodOnly">Canne uniquement</button>
+                <button type="button" id="evMethodsAll" data-i18n="common.allShort">Tout</button>
+                <button type="button" id="evMethodsNone" data-i18n="common.none">Aucun</button>
+                <button type="button" id="evOldRodOnly" data-i18n="ev.oldRodOnly">Canne uniquement</button>
               </div>
             </div>
 
             <div class="ev-method-grid" id="evMethodFilters">
-              <label><input type="checkbox" value="Herbes" checked> <span>Herbes</span></label>
-              <label><input type="checkbox" value="Herbes sombres" checked> <span>Herbes sombres</span></label>
-              <label><input type="checkbox" value="Grotte" checked> <span>Grotte</span></label>
+              <label><input type="checkbox" value="Herbes" checked> <span data-i18n="method.grass">Herbes</span></label>
+              <label><input type="checkbox" value="Herbes sombres" checked> <span data-i18n="method.darkGrass">Herbes sombres</span></label>
+              <label><input type="checkbox" value="Grotte" checked> <span data-i18n="method.cave">Grotte</span></label>
               <label><input type="checkbox" value="Surf" checked> <span>Surf</span></label>
-              <label><input type="checkbox" value="Canne" checked> <span>Canne</span></label>
-              <label><input type="checkbox" value="Super Canne" checked> <span>Super Canne</span></label>
-              <label><input type="checkbox" value="Méga Canne" checked> <span>Méga Canne</span></label>
+              <label><input type="checkbox" value="Canne" checked> <span data-i18n="method.oldRod">Canne</span></label>
+              <label><input type="checkbox" value="Super Canne" checked> <span data-i18n="method.goodRod">Super Canne</span></label>
+              <label><input type="checkbox" value="Méga Canne" checked> <span data-i18n="method.superRod">Méga Canne</span></label>
               <label><input type="checkbox" value="Horde" checked> <span>Horde</span></label>
-              <label><input type="checkbox" value="Leurre" checked> <span>Leurre</span></label>
-              <label><input type="checkbox" value="Coup de Boule" checked> <span>Coup de Boule</span></label>
-              <label><input type="checkbox" value="Arbre à Miel" checked> <span>Arbre à Miel</span></label>
-              <label><input type="checkbox" value="Rochers" checked> <span>Rochers</span></label>
-              <label><input type="checkbox" value="Nuage de poussière" checked> <span>Nuage de poussière</span></label>
-              <label><input type="checkbox" value="Ombre" checked> <span>Ombre</span></label>
-              <label><input type="checkbox" value="Méthode inconnue" checked> <span>Autre</span></label>
+              <label><input type="checkbox" value="Leurre" checked> <span data-i18n="method.lure">Leurre</span></label>
+              <label><input type="checkbox" value="Coup de Boule" checked> <span data-i18n="method.headbutt">Coup de Boule</span></label>
+              <label><input type="checkbox" value="Arbre à Miel" checked> <span data-i18n="method.honey">Arbre à Miel</span></label>
+              <label><input type="checkbox" value="Rochers" checked> <span data-i18n="method.rocks">Rochers</span></label>
+              <label><input type="checkbox" value="Nuage de poussière" checked> <span data-i18n="method.dust">Nuage de poussière</span></label>
+              <label><input type="checkbox" value="Ombre" checked> <span data-i18n="method.shadow">Ombre</span></label>
+              <label><input type="checkbox" value="Méthode inconnue" checked> <span data-i18n="common.other">Autre</span></label>
             </div>
           </div>
 
           <div class="ev-filter-block">
             <div class="ev-filter-title-row">
-              <strong>Période et saison</strong>
-              <small>Les entrées générales restent valables avec les entrées Matin/Jour/Nuit ou saisonnières.</small>
+              <strong data-i18n="ev.periodSeason">Période et saison</strong>
+              <small data-i18n="ev.generalHelp">Les entrées générales restent valables avec les entrées Matin/Jour/Nuit ou saisonnières.</small>
             </div>
 
             <div class="ev-condition-grid">
               <div class="ev-condition-group">
-                <span class="ev-condition-label">Période</span>
+                <span class="ev-condition-label" data-i18n="ev.period">Période</span>
 
                 <div class="ev-filter-chips" id="evPeriodFilters">
-                  <button type="button" class="ev-filter-chip active" data-ev-period="all">Toutes</button>
-                  <button type="button" class="ev-filter-chip" data-ev-period="morning">Matin</button>
-                  <button type="button" class="ev-filter-chip" data-ev-period="day">Jour</button>
-                  <button type="button" class="ev-filter-chip" data-ev-period="night">Nuit</button>
+                  <button type="button" class="ev-filter-chip active" data-ev-period="all" data-i18n="common.all">Toutes</button>
+                  <button type="button" class="ev-filter-chip" data-ev-period="morning" data-i18n="ev.morning">Matin</button>
+                  <button type="button" class="ev-filter-chip" data-ev-period="day" data-i18n="ev.day">Jour</button>
+                  <button type="button" class="ev-filter-chip" data-ev-period="night" data-i18n="ev.night">Nuit</button>
                 </div>
 
-                <small class="ev-condition-help">
+                <small class="ev-condition-help" data-i18n="ev.periodHelp">
                   L'heure du PC n'est pas utilisée pour filtrer les rencontres : sélectionnez la période manuellement.
                 </small>
               </div>
 
               <div class="ev-condition-group">
-                <span class="ev-condition-label">Saison</span>
+                <span class="ev-condition-label" data-i18n="ev.season">Saison</span>
 
                 <div class="ev-filter-chips" id="evSeasonFilters">
                   <button type="button" class="ev-filter-chip active" data-ev-season="auto" id="evSeasonAuto">
                     Auto
                   </button>
-                  <button type="button" class="ev-filter-chip" data-ev-season="all">Toutes</button>
-                  <button type="button" class="ev-filter-chip" data-ev-season="spring">Printemps</button>
-                  <button type="button" class="ev-filter-chip" data-ev-season="summer">Été</button>
-                  <button type="button" class="ev-filter-chip" data-ev-season="autumn">Automne</button>
-                  <button type="button" class="ev-filter-chip" data-ev-season="winter">Hiver</button>
+                  <button type="button" class="ev-filter-chip" data-ev-season="all" data-i18n="common.all">Toutes</button>
+                  <button type="button" class="ev-filter-chip" data-ev-season="spring" data-i18n="ev.spring">Printemps</button>
+                  <button type="button" class="ev-filter-chip" data-ev-season="summer" data-i18n="ev.summer">Été</button>
+                  <button type="button" class="ev-filter-chip" data-ev-season="autumn" data-i18n="ev.autumn">Automne</button>
+                  <button type="button" class="ev-filter-chip" data-ev-season="winter" data-i18n="ev.winter">Hiver</button>
                 </div>
 
                 <small class="ev-condition-help" id="evSeasonAutoHelp">
@@ -219,7 +228,7 @@
               <label class="ev-progress-toggle">
                 <input type="checkbox" id="evUnlockedOnly">
                 <span>
-                  <strong>Uniquement mes zones débloquées</strong>
+                  <strong data-i18n="ev.unlocked">Uniquement mes zones débloquées</strong>
                   <small id="evUnlockedRegionLabel">Progression enregistrée séparément pour chaque région.</small>
                 </span>
               </label>
@@ -228,25 +237,25 @@
             </div>
 
             <details class="ev-progress-details" id="evProgressDetails">
-              <summary>Choisir mes routes / emplacements accessibles</summary>
+              <summary data-i18n="ev.routes">Choisir mes routes / emplacements accessibles</summary>
 
               <div class="ev-progress-tools">
                 <input
                   type="search"
                   id="evZoneSearch"
-                  placeholder="Rechercher une route, une ville, une grotte..."
+                  data-i18n-placeholder="ev.zonePlaceholder" placeholder="Rechercher une route, une ville, une grotte..."
                   autocomplete="off"
                 >
 
                 <div class="ev-filter-actions">
-                  <button type="button" id="evZonesAll">Tout cocher</button>
-                  <button type="button" id="evZonesNone">Tout décocher</button>
+                  <button type="button" id="evZonesAll" data-i18n="ev.selectAll">Tout cocher</button>
+                  <button type="button" id="evZonesNone" data-i18n="ev.clearAll">Tout décocher</button>
                 </div>
               </div>
 
               <div class="ev-zone-select-list" id="evZoneSelectList"></div>
 
-              <p class="ev-progress-help">
+              <p class="ev-progress-help" data-i18n="ev.savedHelp">
                 Tes choix sont mémorisés sur cet appareil. Ils ne modifient pas pokemon-data.js.
               </p>
             </details>
@@ -262,16 +271,16 @@
 
       <section class="empty-state" id="emptyState">
         <div class="empty-icon">?</div>
-        <h2>Choisis un Pokémon</h2>
-        <p>
+        <h2 data-i18n="pokemon.choose">Choisis un Pokémon</h2>
+        <p data-i18n="pokemon.chooseHelp">
           Commence à taper son nom. Tu peux aussi cliquer sur un Pokémon épinglé.
         </p>
       </section>
 
       <section class="empty-state hidden" id="trainerEmptyState">
         <div class="empty-icon">D</div>
-        <h2>Choisis un dresseur</h2>
-        <p>
+        <h2 data-i18n="trainer.choose">Choisis un dresseur</h2>
+        <p data-i18n="trainer.chooseHelp">
           Recherche un Champion d'Arène, un membre du Conseil 4, un Maître,
           un rival ou un dresseur spécial.
         </p>
@@ -291,11 +300,11 @@
 
         <div class="trainer-info-grid">
           <div class="trainer-info-item">
-            <span>Région</span>
+            <span data-i18n="common.region">Région</span>
             <strong id="trainerRegions"></strong>
           </div>
           <div class="trainer-info-item">
-            <span>Position</span>
+            <span data-i18n="trainer.position">Position</span>
             <strong id="trainerPosition"></strong>
           </div>
         </div>
@@ -304,8 +313,8 @@
 
         <section class="trainer-battles-section">
           <div class="trainer-section-title">
-            <span class="section-label">Équipes enregistrées</span>
-            <h3>Combats</h3>
+            <span class="section-label" data-i18n="trainer.teams">Équipes enregistrées</span>
+            <h3 data-i18n="trainer.battles">Combats</h3>
           </div>
           <div id="trainerBattles"></div>
         </section>
@@ -331,12 +340,12 @@
           <!-- Utilise l'espace entre le nom du Pokémon et le bouton Épingler -->
           <div class="combat-matchups">
             <section class="matchup-box weakness-block">
-              <h3>Faiblesses</h3>
+              <h3 data-i18n="pokemon.weakness">Faiblesses</h3>
               <div class="badge-list" id="weaknessList"></div>
             </section>
 
             <section class="matchup-box resistance-block">
-              <h3>Résistances</h3>
+              <h3 data-i18n="pokemon.resistance">Résistances</h3>
               <div class="badge-list" id="resistanceList"></div>
             </section>
           </div>
@@ -349,21 +358,21 @@
         <!-- Informations principales restantes -->
         <div class="info-grid compact-info-grid">
           <section class="info-block">
-            <h3>Immunités</h3>
+            <h3 data-i18n="pokemon.immunity">Immunités</h3>
             <div class="badge-list" id="immunityList"></div>
           </section>
 
           <section class="info-block">
-            <h3>EV gagnés en combat</h3>
+            <h3 data-i18n="pokemon.evYield">EV gagnés en combat</h3>
             <div class="ev-yield-list" id="evYieldList">
-              <span class="muted">Non renseigné</span>
+              <span class="muted" data-i18n="common.noData">Non renseigné</span>
             </div>
           </section>
         </div>
 
         <!-- Détails : anciennement "Données enregistrées mais masquées" -->
         <details class="collapsible-section" id="detailsPanel">
-          <summary>Détails</summary>
+          <summary data-i18n="pokemon.details">Détails</summary>
 
           <div class="collapsible-content">
             <div class="technical-grid" id="technicalData"></div>
@@ -372,12 +381,12 @@
 
         <!-- Localisation placée sous Détails et désormais repliable -->
         <details class="collapsible-section location-collapsible" id="locationPanel">
-          <summary>Localisation</summary>
+          <summary data-i18n="pokemon.locations">Localisation</summary>
 
           <div class="collapsible-content">
             <div class="location-heading">
               <div>
-                <span class="section-label">Localisations disponibles</span>
+                <span class="section-label" data-i18n="pokemon.locationsAvailable">Localisations disponibles</span>
                 <h3 id="locationTitle">Toutes les régions</h3>
               </div>
             </div>
@@ -391,33 +400,34 @@
     <aside class="pins-panel">
       <div class="pins-heading">
         <div>
-          <p class="eyebrow">RACCOURCIS</p>
-          <h2>Pokémon épinglés</h2>
+          <p class="eyebrow" data-i18n="pins.eyebrow">RACCOURCIS</p>
+          <h2 data-i18n="pins.heading">Pokémon épinglés</h2>
         </div>
 
         <span class="pin-count" id="pinCount">0 / 10</span>
       </div>
 
-      <p class="pins-help">
+      <p class="pins-help" data-i18n="pins.help">
         Clique sur un Pokémon pour ouvrir directement sa fiche.
       </p>
 
       <div class="pin-list" id="pinList"></div>
 
-      <button class="clear-pins-btn" id="clearPinsBtn" type="button">
+      <button class="clear-pins-btn" id="clearPinsBtn" type="button" data-i18n="pins.clear">
         Vider les épingles
       </button>
     </aside>
   </main>
 
-  <footer class="site-footer" aria-label="Informations légales">
+  <footer class="site-footer" aria-label="Informations légales" data-i18n-aria-label="footer.aria">
     <p class="site-footer-brand">&copy; 2026 DexForge-Tools — Dex Compagnon</p>
-    <p>Tous droits réservés sur les éléments originaux du site.</p>
-    <p>Projet indépendant et non officiel. Les marques, noms et visuels tiers appartiennent à leurs titulaires respectifs.</p>
+    <p data-i18n="footer.rights">Tous droits réservés sur les éléments originaux du site.</p>
+    <p data-i18n="footer.disclaimer">Projet indépendant et non officiel. Les marques, noms et visuels tiers appartiennent à leurs titulaires respectifs.</p>
   </footer>
 
   <script src="data/pokemon-data.js"></script>
   <script src="data/trainer-data.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/app.js"></script>
 
   <script src="js/pokemon-status.js"></script>

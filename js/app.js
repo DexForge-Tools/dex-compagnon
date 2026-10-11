@@ -30,6 +30,12 @@ const REGIONS = {
   johto: "Johto"
 };
 
+const PI18N = window.DexI18n;
+const cardText = (key) => PI18N?.cardText(key) || key;
+const localName = (pokemon) => PI18N?.pokemonName(pokemon) || pokemon.nom;
+const localTerm = (group, value) => PI18N?.pokemonTerm(group, value) || value;
+const localEvolutionMethod = (value) => PI18N?.evolutionMethod(value) || value;
+
 const MAX_SUGGESTIONS = 10;
 const MAX_PINS = 10;
 const LOCAL_STORAGE_KEY = "pokemmoDexPinsV1";
@@ -104,7 +110,7 @@ function getMatchingPokemon(value) {
   return pokemonSearchIndex
     .filter(({ fr, en }) => fr.startsWith(query) || en.startsWith(query))
     .map(({ pokemon }) => pokemon)
-    .sort((a, b) => a.nom.localeCompare(b.nom, "fr"))
+    .sort((a, b) => localName(a).localeCompare(localName(b), PI18N?.language || "fr"))
     .slice(0, MAX_SUGGESTIONS);
 }
 
@@ -147,7 +153,7 @@ function getApproximatePokemon(value) {
       )
     }))
     .filter((item) => item.distance <= Math.max(2, Math.floor(query.length / 3)))
-    .sort((a, b) => a.distance - b.distance || a.pokemon.nom.localeCompare(b.pokemon.nom, "fr"))
+    .sort((a, b) => a.distance - b.distance || localName(a.pokemon).localeCompare(localName(b.pokemon), PI18N?.language || "fr"))
     .slice(0, MAX_SUGGESTIONS)
     .map((item) => item.pokemon);
 }
@@ -176,7 +182,7 @@ function renderSuggestions() {
   if (matches.length === 0) {
     suggestionsBox.innerHTML = `
       <div class="no-suggestion">
-        Aucun Pokémon trouvé dans la base actuelle.
+        ${escapeHtml(cardText("pokemon.noResult"))}
       </div>
     `;
     suggestionsBox.classList.remove("hidden");
@@ -186,7 +192,7 @@ function renderSuggestions() {
   if (approximate) {
     const info = document.createElement("div");
     info.className = "no-suggestion";
-    info.textContent = "Tu cherchais peut-être :";
+    info.textContent = cardText("pokemon.didYouMean");
     suggestionsBox.appendChild(info);
   }
 
@@ -197,7 +203,7 @@ function renderSuggestions() {
     button.dataset.pokemonId = pokemon.id;
 
     button.innerHTML = `
-      <span>${escapeHtml(pokemon.nom)}</span>
+      <span>${escapeHtml(localName(pokemon))}</span>
       <span class="suggestion-number">#${String(pokemon.id).padStart(3, "0")}</span>
     `;
 
@@ -213,7 +219,7 @@ function renderSuggestions() {
 
 function selectPokemon(pokemon) {
   currentPokemon = pokemon;
-  searchInput.value = pokemon.nom;
+  searchInput.value = localName(pokemon);
   suggestionsBox.classList.add("hidden");
   renderPokemon(pokemon);
 }
@@ -223,16 +229,16 @@ function renderPokemon(pokemon) {
   pokemonCard.classList.remove("hidden");
 
   dexNumberEl.textContent = `#${String(pokemon.id).padStart(3, "0")}`;
-  pokemonNameEl.textContent = pokemon.nom;
-  englishNameEl.textContent =
-    pokemon.nom_en && pokemon.nom_en !== pokemon.nom
-      ? `Nom anglais : ${pokemon.nom_en}`
-      : "";
+  pokemonNameEl.textContent = localName(pokemon);
+  const alternateName = PI18N?.language === "en" ? pokemon.nom : pokemon.nom_en;
+  const alternateKey = PI18N?.language === "en" ? "pokemon.frenchName" : "pokemon.englishName";
+  englishNameEl.textContent = alternateName && alternateName !== localName(pokemon)
+    ? `${cardText(alternateKey)} : ${alternateName}` : "";
 
   renderTypes(pokemon.types);
-  renderMultiplierList(weaknessListEl, pokemon.faiblesses, "Aucune faiblesse enregistrée");
-  renderMultiplierList(resistanceListEl, pokemon.resistances, "Aucune résistance enregistrée");
-  renderSimpleList(immunityListEl, pokemon.immunites, "Aucune immunité");
+  renderMultiplierList(weaknessListEl, pokemon.faiblesses, cardText("pokemon.noWeakness"));
+  renderMultiplierList(resistanceListEl, pokemon.resistances, cardText("pokemon.noResistance"));
+  renderSimpleList(immunityListEl, pokemon.immunites, cardText("pokemon.noImmunity"), "type");
   renderLocations(pokemon);
   renderTechnicalData(pokemon);
   renderEvYield(pokemon);
@@ -243,7 +249,7 @@ function renderPokemon(pokemon) {
 
 function loadSprite(pokemon) {
   // Aucun sprite local n'est distribué : une requête inutile en moins par fiche.
-  spriteEl.alt = `Sprite de ${pokemon.nom}`;
+  spriteEl.alt = PI18N?.language === "en" ? `Sprite of ${localName(pokemon)}` : `Sprite de ${localName(pokemon)}`;
   spriteEl.onerror = null;
   spriteEl.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`;
 }
@@ -254,7 +260,7 @@ function renderTypes(types) {
   types.forEach((type) => {
     const badge = document.createElement("span");
     badge.className = "type-badge";
-    badge.textContent = type;
+    badge.textContent = localTerm("type", type);
     typeListEl.appendChild(badge);
   });
 }
@@ -270,19 +276,19 @@ function renderMultiplierList(container, values, emptyMessage) {
   }
 
   entries
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "fr"))
+    .sort((a, b) => b[1] - a[1] || localTerm("type", a[0]).localeCompare(localTerm("type", b[0]), PI18N?.language || "fr"))
     .forEach(([type, multiplier]) => {
       const badge = document.createElement("span");
       badge.className = "multiplier-badge";
       badge.innerHTML = `
-        <span>${escapeHtml(type)}</span>
+        <span>${escapeHtml(localTerm("type", type))}</span>
         <span class="multiplier">×${escapeHtml(multiplier)}</span>
       `;
       container.appendChild(badge);
     });
 }
 
-function renderSimpleList(container, values, emptyMessage) {
+function renderSimpleList(container, values, emptyMessage, group = "") {
   container.innerHTML = "";
 
   if (!values || values.length === 0) {
@@ -293,14 +299,14 @@ function renderSimpleList(container, values, emptyMessage) {
   values.forEach((value) => {
     const badge = document.createElement("span");
     badge.className = "plain-badge";
-    badge.textContent = value;
+    badge.textContent = group ? localTerm(group, value) : value;
     container.appendChild(badge);
   });
 }
 
 function renderLocations(pokemon) {
   locationListEl.innerHTML = "";
-  locationTitleEl.textContent = REGIONS[selectedRegion];
+  locationTitleEl.textContent = selectedRegion === "all" ? window.DexI18n?.t("common.allRegions") || REGIONS.all : REGIONS[selectedRegion];
 
   const regionsToShow =
     selectedRegion === "all"
@@ -331,10 +337,10 @@ function renderLocations(pokemon) {
 
       item.innerHTML = `
         <div>
-          <div class="location-zone">${escapeHtml(location.zone || "Zone inconnue")}</div>
+          <div class="location-zone">${escapeHtml(location.zone || cardText("pokemon.unknownZone"))}</div>
         </div>
-        <div class="location-detail">${escapeHtml(location.methode || "Méthode inconnue")}</div>
-        <div class="location-detail">${escapeHtml(location.niveau || "Niveau ?")}</div>
+        <div class="location-detail">${escapeHtml(location.methode || cardText("pokemon.unknownMethod"))}</div>
+        <div class="location-detail">${escapeHtml(location.niveau || cardText("pokemon.unknownLevel"))}</div>
         <div class="location-detail">${escapeHtml(location.rarete || "")}</div>
       `;
 
@@ -347,7 +353,7 @@ function renderLocations(pokemon) {
   if (!displayedSomething) {
     locationListEl.innerHTML = `
       <p class="muted" style="margin:18px 0 0;">
-        Aucune localisation n'est renseignée dans la base pour ce Pokémon et cette région.
+${escapeHtml(cardText("pokemon.noLocation"))}
       </p>
     `;
   }
@@ -357,9 +363,9 @@ function renderTechnicalData(pokemon) {
   technicalDataEl.innerHTML = "";
 
   const items = [
-    ["Talent(s)", pokemon.talents?.join(", ") || "Non renseigné"],
-    ["Stats de base", objectToText(pokemon.stats)],
-    ["Évolution", evolutionsToText(pokemon.evolutions || (pokemon.evolution ? [pokemon.evolution] : []))]
+    [cardText("pokemon.abilities"), pokemon.talents?.map((ability) => localTerm("ability", ability)).join(", ") || cardText("common.noData")],
+    [cardText("pokemon.baseStats"), objectToText(pokemon.stats)],
+    [cardText("pokemon.evolution"), evolutionsToText(pokemon.evolutions || (pokemon.evolution ? [pokemon.evolution] : []))]
   ];
 
   items.forEach(([label, value]) => {
@@ -376,11 +382,11 @@ function renderTechnicalData(pokemon) {
   const eggItem = document.createElement("div");
   eggItem.className = "tech-item egg-tech-item";
   const eggTitle = document.createElement("strong");
-  eggTitle.textContent = "Groupes d'œuf";
+  eggTitle.textContent = cardText("pokemon.eggGroups");
   const eggList = document.createElement("div");
   eggList.id = "eggGroupList";
   eggList.className = "plain-list";
-  renderSimpleList(eggList, pokemon.groupes_oeuf, "Non renseigné");
+  renderSimpleList(eggList, pokemon.groupes_oeuf, cardText("common.noData"), "egg");
   eggItem.append(eggTitle, eggList);
   technicalDataEl.appendChild(eggItem);
 }
@@ -390,45 +396,45 @@ function renderEvYield(pokemon) {
   const entries = Object.entries(pokemon.ev || {});
 
   if (!entries.length) {
-    evYieldListEl.innerHTML = '<span class="muted">Aucun EV renseigné</span>';
+    evYieldListEl.textContent = cardText("pokemon.noEv");
     return;
   }
 
   entries.forEach(([stat, amount]) => {
     const badge = document.createElement("span");
     badge.className = "ev-yield-badge";
-    badge.textContent = `+${amount} ${stat}`;
+    badge.textContent = `+${amount} ${localTerm("ev", stat)}`;
     evYieldListEl.appendChild(badge);
   });
 }
 
 function objectToText(value) {
   if (!value || Object.keys(value).length === 0) {
-    return "Non renseigné";
+    return cardText("common.noData");
   }
 
   return Object.entries(value)
-    .map(([key, val]) => `${key}: ${val}`)
+    .map(([key, val]) => `${localTerm("stat", key)}: ${val}`)
     .join(" · ");
 }
 
 function evolutionsToText(evolutions) {
   if (!evolutions || evolutions.length === 0) {
-    return "Pas d'évolution suivante enregistrée";
+    return cardText("pokemon.noEvolution");
   }
 
   return evolutions
     .map((evolution) => {
       const target = getPokemonById(evolution.vers);
-      const targetName = evolution.nom || (target ? target.nom : `#${evolution.vers}`);
+      const targetName = target ? localName(target) : (evolution.nom || `#${evolution.vers}`);
 
       if (evolution.methode) {
-        return `${targetName} — ${evolution.methode}`;
+        return `${targetName} — ${localEvolutionMethod(evolution.methode)}`;
       }
 
       const details = [];
       if (evolution.type) details.push(evolution.type);
-      if (evolution.niveau) details.push(`niveau ${evolution.niveau}`);
+      if (evolution.niveau) details.push(`${cardText("pokemon.level")} ${evolution.niveau}`);
 
       return `${targetName}${details.length ? ` — ${details.join(", ")}` : ""}`;
     })
@@ -465,7 +471,7 @@ function pinPokemon(pokemon) {
   }
 
   if (pins.length >= MAX_PINS) {
-    alert("Les 10 emplacements sont déjà utilisés. Retire d'abord un Pokémon.");
+    alert(cardText("pokemon.fullPins"));
     return;
   }
 
@@ -501,7 +507,7 @@ function renderPins() {
     if (!pokemonId) {
       const empty = document.createElement("div");
       empty.className = "empty-pin";
-      empty.textContent = "Emplacement libre";
+      empty.textContent = cardText("pokemon.freeSlot");
       slot.appendChild(empty);
 
       const spacer = document.createElement("div");
@@ -512,7 +518,7 @@ function renderPins() {
       const openButton = document.createElement("button");
       openButton.type = "button";
       openButton.className = "pin-open-btn";
-      openButton.textContent = pokemon ? pokemon.nom : `Pokémon #${pokemonId}`;
+      openButton.textContent = pokemon ? localName(pokemon) : `Pokémon #${pokemonId}`;
       openButton.addEventListener("click", () => {
         if (pokemon) selectPokemon(pokemon);
       });
@@ -522,7 +528,7 @@ function renderPins() {
       removeButton.type = "button";
       removeButton.className = "pin-remove-btn";
       removeButton.textContent = "×";
-      removeButton.title = "Retirer";
+      removeButton.title = cardText("pokemon.remove");
       removeButton.addEventListener("click", (event) => {
         event.stopPropagation();
         unpinPokemon(pokemonId);
@@ -541,7 +547,7 @@ function updateCurrentPinButton() {
 
   const pinned = isPinned(currentPokemon.id);
 
-  pinCurrentBtn.textContent = pinned ? "✓ Épinglé" : "📌 Épingler";
+  pinCurrentBtn.textContent = pinned ? cardText("pokemon.pinned") : cardText("pokemon.pin");
   pinCurrentBtn.classList.toggle("is-pinned", pinned);
 }
 
@@ -648,7 +654,7 @@ clearPinsBtn.addEventListener("click", () => {
     return;
   }
 
-  const confirmed = confirm("Vider les 10 emplacements épinglés ?");
+  const confirmed = confirm(cardText("pokemon.clearConfirm"));
 
   if (confirmed) {
     savePins([]);
@@ -658,3 +664,16 @@ clearPinsBtn.addEventListener("click", () => {
 });
 
 renderPins();
+
+// Re-render the currently displayed entry when the language changes.
+// No changes are made to saved Pokémon IDs, filters or encounter data.
+document.addEventListener("dex:languagechange", () => {
+  if (currentPokemon) {
+    const oldNames = [currentPokemon.nom, currentPokemon.nom_en || currentPokemon.nom];
+    const keepSelectedName = oldNames.includes(searchInput.value.trim());
+    renderPokemon(currentPokemon);
+    if (keepSelectedName) searchInput.value = localName(currentPokemon);
+  }
+  if (!suggestionsBox.classList.contains("hidden")) renderSuggestions();
+  renderPins();
+});

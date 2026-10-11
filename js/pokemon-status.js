@@ -49,6 +49,8 @@
   ]);
 
   const statusList = document.querySelector("#pokemonStatusList");
+  const st = (key) => window.DexI18n?.cardText(key) || key;
+
 
   function countWildEncounters(pokemon) {
     return Object.values(pokemon?.locations || {})
@@ -60,48 +62,48 @@
 
     if (MYTHICALS.has(id)) {
       return {
-        label: "Fabuleux",
+        label: st("status.mythical"),
         className: "status-mythical"
       };
     }
 
     if (LEGENDARIES.has(id)) {
       return {
-        label: "Légendaire",
+        label: st("status.legendary"),
         className: "status-legendary"
       };
     }
 
     if (PSEUDO_FINAL.has(id)) {
       return {
-        label: "Pseudo-légendaire",
+        label: st("status.pseudo"),
         className: "status-pseudo"
       };
     }
 
     if (PSEUDO_FAMILIES.has(id)) {
       return {
-        label: "Lignée pseudo-légendaire",
+        label: st("status.pseudoLine"),
         className: "status-pseudo-line"
       };
     }
 
     if (STARTER_FAMILIES.has(id)) {
       return {
-        label: "Starter",
+        label: st("status.starter"),
         className: "status-starter"
       };
     }
 
     if (FOSSILS.has(id)) {
       return {
-        label: "Fossile",
+        label: st("status.fossil"),
         className: "status-fossil"
       };
     }
 
     return {
-      label: "Standard",
+      label: st("status.standard"),
       className: "status-standard"
     };
   }
@@ -109,9 +111,9 @@
   function getAvailability(pokemon) {
     if (pokemon?.obtenable === false) {
       return {
-        label: "Non obtenable normalement",
+        label: st("status.unavailable"),
         className: "availability-unavailable",
-        detail: "Les données utilisées signalent ce Pokémon comme non obtenable normalement."
+        detail: st("status.unavailableDesc")
       };
     }
 
@@ -119,16 +121,18 @@
 
     if (encounters > 0) {
       return {
-        label: "Sauvage",
+        label: st("status.wild"),
         className: "availability-wild",
-        detail: `${encounters} rencontre${encounters > 1 ? "s" : ""} sauvage${encounters > 1 ? "s" : ""} enregistrée${encounters > 1 ? "s" : ""}.`
+        detail: window.DexI18n?.language === "en"
+          ? `${encounters} wild encounter${encounters > 1 ? "s" : ""} recorded.`
+          : `${encounters} rencontre${encounters > 1 ? "s" : ""} sauvage${encounters > 1 ? "s" : ""} enregistrée${encounters > 1 ? "s" : ""}.`
       };
     }
 
     return {
-      label: "Obtention spéciale",
+      label: st("status.special"),
       className: "availability-special",
-      detail: "Aucune rencontre sauvage n'est enregistrée dans les données disponibles."
+      detail: st("status.specialDesc")
     };
   }
 
@@ -180,9 +184,9 @@
     const category = getPokemonCategory(pokemon);
     const availability = getAvailability(pokemon);
 
-    appendDetailCard("Catégorie", category.label, category.className);
+    appendDetailCard(st("status.category"), category.label, category.className);
     appendDetailCard(
-      "Disponibilité",
+      st("status.availability"),
       `${availability.label} — ${availability.detail}`,
       availability.className
     );
