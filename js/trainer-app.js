@@ -395,9 +395,11 @@ function createTrainerPokemonCard(member) {
     ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`
     : "";
 
-  const types = member.types?.length
-    ? member.types
-    : (pokemon?.types || []);
+  // Le Pokédex fait foi pour les types de l’espèce standard.
+  // Les types du dresseur ne servent que si la fiche est introuvable.
+  const types = pokemon?.types?.length
+    ? pokemon.types
+    : (member.types || []);
 
   card.innerHTML = `
     <div class="trainer-pokemon-main">

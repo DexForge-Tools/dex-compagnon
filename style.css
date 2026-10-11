@@ -566,7 +566,7 @@ h2 {
   .app-shell {
     width: min(100% - 14px, 1380px);
     margin: 8px auto;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 10px;
   }
 
@@ -1137,7 +1137,7 @@ h1 {
 
 @media (max-width: 980px) {
   .app-shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -2490,4 +2490,13 @@ h1 {
 @media (max-width: 520px) {
   .app-header { flex-wrap: wrap; }
   .header-actions { margin-left: auto; }
+}
+
+/* V2.0 β7 — les trois modes restent accessibles sur les petits téléphones. */
+@media (max-width: 350px) {
+  .search-mode-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
 }
