@@ -70,8 +70,35 @@ function getPokemonByExactName(value) {
   return pokemonSearchIndex.find(({ fr, en }) => fr === query || en === query)?.pokemon;
 }
 
+// Les numéros acceptés : 25, 025, #25 ou #025.
+function isDexNumberQuery(value) {
+  return /^#?\d+$/.test(value.trim());
+}
+
+function getPokemonByExactSearch(value) {
+  const query = value.trim();
+  if (isDexNumberQuery(query)) {
+    return getPokemonById(Number(query.replace(/^#/, "")));
+  }
+  return getPokemonByExactName(query);
+}
+
 function getMatchingPokemon(value) {
-  const query = normalizeText(value);
+  const rawQuery = value.trim();
+  if (isDexNumberQuery(rawQuery)) {
+    const digits = rawQuery.replace(/^#/, "");
+    const exactId = Number(digits);
+
+    return POKEMONS
+      .filter((pokemon) =>
+        String(pokemon.id).startsWith(digits) ||
+        String(pokemon.id).padStart(3, "0").startsWith(digits)
+      )
+      .sort((a, b) => (b.id === exactId) - (a.id === exactId) || a.id - b.id)
+      .slice(0, MAX_SUGGESTIONS);
+  }
+
+  const query = normalizeText(rawQuery);
   if (!query) return [];
 
   return pokemonSearchIndex
@@ -138,7 +165,7 @@ function renderSuggestions() {
   let matches = getMatchingPokemon(value);
   let approximate = false;
 
-  if (matches.length === 0) {
+  if (matches.length === 0 && !isDexNumberQuery(value)) {
     matches = getApproximatePokemon(value);
     approximate = matches.length > 0;
   }
@@ -540,8 +567,11 @@ function setActiveSuggestion(index) {
 searchInput.addEventListener("input", () => {
   renderSuggestions();
 
-  const exact = getPokemonByExactName(searchInput.value.trim());
+  // Ne pas sélectionner #002 pendant que l'utilisateur tape #025.
+  const query = searchInput.value.trim();
+  if (isDexNumberQuery(query)) return;
 
+  const exact = getPokemonByExactName(query);
   if (exact) {
     selectPokemon(exact);
   }
@@ -561,7 +591,7 @@ searchInput.addEventListener("keydown", (event) => {
   }
 
   if (event.key === "Enter") {
-    const exact = getPokemonByExactName(searchInput.value.trim());
+    const exact = getPokemonByExactSearch(searchInput.value.trim());
 
     if (exact) {
       event.preventDefault();
