@@ -127,6 +127,9 @@
   function evMethodLabel(method) { return evEnglish() ? (EN_METHODS[method] || method) : method; }
   function evRarityLabel(rarity) { return evEnglish() ? (EN_RARITY[rarity] || rarity) : rarity; }
   function countLabel(count) { return evText(count === 1 ? "zone" : "zones"); }
+  function evLocationName(region, zone) {
+    return window.DexI18n?.locationName?.(region, zone) ?? zone;
+  }
 
   let evRegion = "all";
 
@@ -372,10 +375,11 @@
     const query = normalizeForSearch(evZoneSearch.value);
 
     evZoneSelectList.querySelectorAll(".ev-zone-choice").forEach((label) => {
-      const zone = normalizeForSearch(label.dataset.zone);
+      const originalName = normalizeForSearch(label.dataset.zone);
+      const localizedName = normalizeForSearch(evLocationName(evRegion, label.dataset.zone));
       label.classList.toggle(
         "hidden-by-search",
-        Boolean(query) && !zone.includes(query)
+        Boolean(query) && !originalName.includes(query) && !localizedName.includes(query)
       );
     });
   }
@@ -406,7 +410,7 @@
 
     if (evUnlockedRegionLabel) {
       evUnlockedRegionLabel.textContent =
-        `${REGION_LABELS[evRegion] || evRegion} — ${evText("savedRegion")}`;
+        `${regionLabel(evRegion)} — ${evText("savedRegion")}`;
     }
 
     evZoneSelectList.innerHTML = "";
@@ -422,8 +426,8 @@
       input.checked = unlocked.has(zone);
 
       const text = document.createElement("span");
-      text.textContent = zone;
-      text.title = zone;
+      text.textContent = evLocationName(evRegion, zone);
+      text.title = text.textContent;
 
       input.addEventListener("change", () => {
         const next = currentUnlockedSet();
@@ -704,7 +708,7 @@
   }
 
   function regionLabel(region) {
-    return REGION_LABELS[region] || region;
+    return window.DexI18n?.regionLabel?.(region) || REGION_LABELS[region] || region;
   }
 
   function createYieldBadges(entry) {
@@ -738,7 +742,7 @@
     summary.innerHTML = `
       <div class="ev-zone-title">
         <div class="ev-zone-title-row">
-          <h3>${rank + 1}. ${escapeHtml(group.zone)}</h3>
+          <h3>${rank + 1}. ${escapeHtml(evLocationName(group.region, group.zone))}</h3>
           <span class="ev-zone-region">${escapeHtml(regionLabel(group.region))}</span>
           <span class="ev-zone-method">${escapeHtml(evMethodLabel(group.method))}</span>
         </div>
@@ -1111,10 +1115,19 @@
     if (evRegion !== "all") {
       if (evUnlockedRegionLabel) {
         evUnlockedRegionLabel.textContent =
-          `${REGION_LABELS[evRegion] || evRegion} — ${evText("savedRegion")}`;
+          `${regionLabel(evRegion)} — ${evText("savedRegion")}`;
       }
       updateProgressCount();
     }
+    // Keep the original checkbox values and data-zone attributes for saved progress.
+    evZoneSelectList?.querySelectorAll(".ev-zone-choice").forEach((label) => {
+      const span = label.querySelector("span");
+      if (span) {
+        span.textContent = evLocationName(evRegion, label.dataset.zone);
+        span.title = span.textContent;
+      }
+    });
+    filterZoneChoices();
     renderEvSearch();
   });
 })();

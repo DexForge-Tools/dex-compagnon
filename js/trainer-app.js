@@ -82,7 +82,8 @@ function trainerNames(trainer) {
 function trainerSearchTerms(trainer) {
   const regions = (trainer.regions || []).flatMap((region) => [
     region,
-    REGIONS[region] || region
+    REGIONS[region] || region,
+    window.DexI18n?.regionLabel?.(region) || region
   ]);
 
   const automatic = [
@@ -239,7 +240,7 @@ function renderTrainerSuggestions() {
     button.dataset.trainerSlug = trainer.slug;
 
     const regions = (trainer.regions || [])
-      .map((region) => REGIONS[region] || region)
+      .map((region) => window.DexI18n?.regionLabel?.(region) || REGIONS[region] || region)
       .join(", ");
 
     const categoryLine = [
@@ -293,7 +294,7 @@ function renderTrainer(trainer) {
   trainerCategoryEl.textContent = trainer.categorie || "Dresseur important";
   trainerSpecialtyEl.textContent = trainer.specialite || "Varié";
   trainerRegionsEl.textContent = (trainer.regions || [])
-    .map((region) => REGIONS[region] || region)
+    .map((region) => window.DexI18n?.regionLabel?.(region) || REGIONS[region] || region)
     .join(", ") || "Non renseignée";
   trainerPositionEl.textContent = trainer.position || "Non renseignée";
 
@@ -582,4 +583,14 @@ regionTabs.addEventListener("click", () => {
       trainerSearchInput.value = "";
     }
   }
+});
+
+// Refresh the geographic labels of an already open trainer, without changing its data.
+document.addEventListener("dex:languagechange", () => {
+  if (currentTrainer && !trainerCard.classList.contains("hidden")) {
+    trainerRegionsEl.textContent = (currentTrainer.regions || [])
+      .map((region) => window.DexI18n?.regionLabel?.(region) || REGIONS[region] || region)
+      .join(", ") || "Non renseignée";
+  }
+  if (!trainerSuggestionsBox.classList.contains("hidden")) renderTrainerSuggestions();
 });

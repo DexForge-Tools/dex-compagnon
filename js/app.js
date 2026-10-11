@@ -35,6 +35,11 @@ const cardText = (key) => PI18N?.cardText(key) || key;
 const localName = (pokemon) => PI18N?.pokemonName(pokemon) || pokemon.nom;
 const localTerm = (group, value) => PI18N?.pokemonTerm(group, value) || value;
 const localEvolutionMethod = (value) => PI18N?.evolutionMethod(value) || value;
+const localLocationName = (region, value) => PI18N?.locationName?.(region, value) ?? value;
+const localLocationMethod = (value) => PI18N?.locationMethod?.(value) ?? value;
+const localLocationRarity = (value) => PI18N?.locationRarity?.(value) ?? value;
+const localLocationLevel = (value) => PI18N?.locationLevel?.(value) ?? value;
+const localRegionLabel = (region) => PI18N?.regionLabel?.(region) || REGIONS[region] || region;
 
 const MAX_SUGGESTIONS = 10;
 const MAX_PINS = 10;
@@ -306,7 +311,7 @@ function renderSimpleList(container, values, emptyMessage, group = "") {
 
 function renderLocations(pokemon) {
   locationListEl.innerHTML = "";
-  locationTitleEl.textContent = selectedRegion === "all" ? window.DexI18n?.t("common.allRegions") || REGIONS.all : REGIONS[selectedRegion];
+  locationTitleEl.textContent = selectedRegion === "all" ? window.DexI18n?.t("common.allRegions") || REGIONS.all : localRegionLabel(selectedRegion);
 
   const regionsToShow =
     selectedRegion === "all"
@@ -328,7 +333,7 @@ function renderLocations(pokemon) {
     regionWrapper.className = "location-region";
 
     const title = document.createElement("h4");
-    title.textContent = REGIONS[region];
+    title.textContent = localRegionLabel(region);
     regionWrapper.appendChild(title);
 
     locations.forEach((location) => {
@@ -337,11 +342,11 @@ function renderLocations(pokemon) {
 
       item.innerHTML = `
         <div>
-          <div class="location-zone">${escapeHtml(location.zone || cardText("pokemon.unknownZone"))}</div>
+          <div class="location-zone">${escapeHtml(localLocationName(region, location.zone || cardText("pokemon.unknownZone")))}</div>
         </div>
-        <div class="location-detail">${escapeHtml(location.methode || cardText("pokemon.unknownMethod"))}</div>
-        <div class="location-detail">${escapeHtml(location.niveau || cardText("pokemon.unknownLevel"))}</div>
-        <div class="location-detail">${escapeHtml(location.rarete || "")}</div>
+        <div class="location-detail">${escapeHtml(localLocationMethod(location.methode || cardText("pokemon.unknownMethod")))}</div>
+        <div class="location-detail">${escapeHtml(localLocationLevel(location.niveau || cardText("pokemon.unknownLevel")))}</div>
+        <div class="location-detail">${escapeHtml(localLocationRarity(location.rarete || ""))}</div>
       `;
 
       regionWrapper.appendChild(item);

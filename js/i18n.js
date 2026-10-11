@@ -100,7 +100,8 @@
   "pokemon.placeholder": "E.g. Magikarp, Pikachu, 25 or #025...",
   "trainer.placeholder": "E.g. Brock, Cynthia, Lance...",
   "ev.zonePlaceholder": "Search for a route, city, cave...",
-  "footer.aria": "Legal information"
+  "footer.aria": "Legal information",
+  "region.unys": "Unova"
 };
   let language = "fr";
   try {
@@ -546,6 +547,238 @@
     return text;
   }
 
+  const locationNames = {
+  "shared": {
+    "Route Victoire": "Victory Road",
+    "Parc Safari": "Safari Zone",
+    "Grotte Métamo": "Altering Cave",
+    "Grotte": "Cave",
+    "Île 1": "One Island",
+    "Île 4": "Four Island",
+    "Île 5": "Five Island",
+    "Ligue Pokémon": "Pokémon League"
+  },
+  "kanto": {
+    "Azuria": "Cerulean City",
+    "Bois Baies": "Berry Forest",
+    "Bourg Palette": "Pallet Town",
+    "Camp de Vacances": "Resort Gorgeous",
+    "Canyon Sesor": "Sevault Canyon",
+    "Cap Falaise": "Cape Brink",
+    "Carmin sur Mer": "Vermilion City",
+    "Cave Taupiqueur": "Diglett’s Cave",
+    "Caverne Azurée": "Cerulean Cave",
+    "Centrale": "Power Plant",
+    "Chemin Vert": "Green Path",
+    "Cramois'île": "Cinnabar Island",
+    "Céladopole": "Celadon City",
+    "Entrée Canyon": "Canyon Entrance",
+    "Entrée du Canyon": "Canyon Entrance",
+    "Forbuissons": "Pattern Bush",
+    "Forêt de Jade": "Viridian Forest",
+    "Grotte Azurée": "Cerulean Cave",
+    "Grotte Perdue": "Lost Cave",
+    "Grotte de Glace": "Icefall Cave",
+    "Jadielle": "Viridian City",
+    "L'Océane": "S.S. Anne",
+    "Labyrinthe D'O": "Water Labyrinth",
+    "Labyrinthe d'O": "Water Labyrinth",
+    "Manoir Pokémon": "Pokémon Mansion",
+    "Mont Braise": "Mt. Ember",
+    "Mont Sélénite": "Mt. Moon",
+    "Mémorial": "Memorial Pillar",
+    "Parmanie": "Fuchsia City",
+    "Plage Trésor": "Treasure Beach",
+    "Pont du Lien": "Bond Bridge",
+    "Port Île 3": "Three Island Port",
+    "Pré Île 5": "Five Isle Meadow",
+    "Route Tison": "Kindle Road",
+    "Ruines Tanoby": "Tanoby Ruins",
+    "Tour Dresseurs": "Trainer Tower",
+    "Tour Pokémon": "Pokémon Tower",
+    "Vallée Ruine": "Ruin Valley",
+    "Îles Écume": "Seafoam Islands",
+    "Île du Lointain": "Faraway Island"
+  },
+  "hoenn": {
+    "Algatia": "Mossdeep City",
+    "Atalanopolis": "Sootopolis City",
+    "Bois Clémenti": "Petalburg Woods",
+    "Caverne Fondmer": "Seafloor Cavern",
+    "Chemin Ardent": "Fiery Path",
+    "Clémenti-Ville": "Petalburg City",
+    "Clémenti-ville": "Petalburg City",
+    "Fond marin": "Underwater",
+    "Grotte Atelier": "Artisan Cave",
+    "Grotte Granite": "Granite Cave",
+    "Grotte Origine": "Cave of Origin",
+    "Grotte Tréfonds": "Shoal Cave",
+    "Mont Mémoria": "Mt. Pyre",
+    "Myokara": "Dewford Town",
+    "New Lavandia": "New Mauville",
+    "Nénucrique": "Lilycove City",
+    "Pacifiville": "Pacifidlog Town",
+    "Pilier Céleste": "Sky Pillar",
+    "Planque Aqua": "Aqua Hideout",
+    "Planque Magma": "Magma Hideout",
+    "Poivressel": "Slateport City",
+    "Sentier Sinuroc": "Jagged Pass",
+    "Site Météore": "Meteor Falls",
+    "Tour Mirage": "Mirage Tower",
+    "Tunnel Mérazon": "Rusturf Tunnel",
+    "Voie du Désert": "Desert Underpass",
+    "Zone de Combat": "Battle Frontier",
+    "Épave": "Abandoned Ship",
+    "Éternara": "Ever Grande City"
+  },
+  "sinnoh": {
+    "Aire de Détente": "Resort Area",
+    "Arbre à Miel": "Honey Tree",
+    "Bonaugure": "Twinleaf Town",
+    "Celestia": "Celestic Town",
+    "Chemin Rocheux": "Ravaged Path",
+    "Entrée Charbourg": "Oreburgh Gate",
+    "Forge Fuego": "Fuego Ironworks",
+    "Forêt Vestigion": "Eterna Forest",
+    "Grand Marais": "Great Marsh",
+    "Grotte Retour": "Turnback Cave",
+    "Grotte Revêche": "Wayward Cave",
+    "Grotte Ruineman.": "Ruin Maniac Cave",
+    "Jardin Trophée": "Trophy Garden",
+    "Joliberges": "Canalave City",
+    "Lac Courage": "Lake Valor",
+    "Lac Savoir": "Lake Acuity",
+    "Lac Vérité": "Lake Verity",
+    "Les Éoliennes": "Valley Windworks",
+    "Mine Charbourg": "Oreburgh Mine",
+    "Mont Abrupt": "Stark Mountain",
+    "Mont Couronné": "Mt. Coronet",
+    "Rivamar": "Sunyshore City",
+    "Rive Lac Courage": "Valor Lakefront",
+    "Rive Lac Savoir": "Acuity Lakefront",
+    "Ruines Bonville": "Solaceon Ruins",
+    "Source Adieu": "Sendoff Spring",
+    "Temple Frimapic": "Snowpoint Temple",
+    "Tunnel Ruineman.": "Ruin Maniac Tunnel",
+    "Verchamps": "Pastoria City",
+    "Vestigion": "Eterna City",
+    "Vieux Château": "Old Chateau",
+    "Île de Fer": "Iron Island"
+  },
+  "unys": {
+    "Antre d'Entraînement": "Challenger’s Cave",
+    "Autel Abondance": "Abundant Shrine",
+    "Baie Vaguelone": "Undella Bay",
+    "Bois des Illusions": "Lostlorn Forest",
+    "Château Enfoui": "Relic Castle",
+    "Désert Délassant": "Desert Resort",
+    "Espace Guide": "Guidance Chamber",
+    "Flocombe": "Icirrus City",
+    "Forêt d'Empoigne": "Pinwheel Forest",
+    "Grotte Cyclopéenne": "Giant Chasm",
+    "Grotte Parsemille": "Mistralton Cave",
+    "Grotte Électrolithe": "Chargestone Cave",
+    "Hangar Frigorifique": "Cold Storage",
+    "Labo P2": "P2 Laboratory",
+    "Mont Foré": "Twist Mountain",
+    "Ogoesse": "Striaton City",
+    "Pont Yoneuve": "Driftveil Drawbridge",
+    "Pont de l'Inconnu": "Marvelous Bridge",
+    "Pont du Hameau": "Village Bridge",
+    "Port Yoneuve": "Driftveil City",
+    "Salle Épreuve": "Trial Chamber",
+    "Tour Dragospire": "Dragonspiral Tower",
+    "Tour des Cieux": "Celestial Tower",
+    "Tourbière Flocombe": "Moor of Icirrus",
+    "Vaguelone": "Undella Town",
+    "Veine Souterraine": "Wellspring Cave",
+    "Vestiges du Rêve": "Dreamyard"
+  },
+  "johto": {
+    "Acajou": "Mahogany Town",
+    "Antre Noir": "Dark Cave",
+    "Antre du Dragon": "Dragon’s Den",
+    "Bois aux Chênes": "Ilex Forest",
+    "Bourg Geon": "New Bark Town",
+    "Caves Jumelles": "Union Cave",
+    "Chutes Tohjo": "Tohjo Falls",
+    "Dôme Pokéathlon": "Pokéathlon Dome",
+    "Ecorcia": "Azalea Town",
+    "Grotte Argentée": "Mt. Silver Cave",
+    "Grotte Falaise": "Cliff Cave",
+    "Irisia": "Cianwood City",
+    "Lac Colère": "Lake of Rage",
+    "Mauville": "Violet City",
+    "Mont Argenté": "Mt. Silver",
+    "Mont Creuset": "Mt. Mortar",
+    "Oliville": "Olivine City",
+    "Parc Naturel": "National Park",
+    "Portail Falaise": "Cliff Edge Gate",
+    "Portail Safari": "Safari Zone Gate",
+    "Puits Ramoloss": "Slowpoke Well",
+    "Repaire Rocket": "Team Rocket HQ",
+    "Rosalia": "Ecruteak City",
+    "Route de Glace": "Ice Path",
+    "Ruines d'Alpha": "Ruins of Alph",
+    "Tour Carillon": "Bell Tower",
+    "Tour Cendrée": "Burned Tower",
+    "Tour Chétiflor": "Sprout Tower",
+    "Tourb'Îles": "Whirl Islands",
+    "Ville Griotte": "Cherrygrove City",
+    "Ébènelle": "Blackthorn City"
+  }
+};
+
+  // Display-only localization. Never translate location IDs in the dataset or saved EV progress.
+  const encounterMethods = {
+    "Herbes": "Grass", "Herbes sombres": "Dark grass", "Grotte": "Cave",
+    "Surf": "Surf", "Canne": "Old Rod", "Super Canne": "Good Rod",
+    "Méga Canne": "Super Rod", "Pêche": "Fishing", "Intérieur": "Indoors",
+    "Arbre à Miel": "Honey tree", "Coup de Boule": "Headbutt", "Rochers": "Rocks",
+    "Nuage de poussière": "Dust cloud", "Ombre": "Shadow", "Horde": "Horde",
+    "Leurre": "Lure", "Méthode inconnue": "Unknown method"
+  };
+  const encounterRarities = {
+    "Très commun": "Very common", "Commun": "Common", "Peu commun": "Uncommon",
+    "Rare": "Rare", "Très rare": "Very rare", "Horde": "Horde",
+    "Leurre": "Lure", "Spécial": "Special"
+  };
+  const conditionNames = {
+    "Jour": "Day", "Matin": "Morning", "Nuit": "Night",
+    "Printemps": "Spring", "Été": "Summer", "Automne": "Autumn", "Hiver": "Winter"
+  };
+  const displayRegions = { all: "All regions", kanto: "Kanto", hoenn: "Hoenn", sinnoh: "Sinnoh", unys: "Unova", johto: "Johto" };
+
+  function regionLabel(region) {
+    if (language !== "en") return ({ all: "Toutes les régions", unys: "Unys" })[region] || region.charAt(0).toUpperCase() + region.slice(1);
+    return displayRegions[region] || region;
+  }
+  function locationName(region, value) {
+    const source = String(value ?? "");
+    if (language !== "en" || !source) return source;
+    // Extract only trailing time/season conditions, while keeping the complete raw value for filtering.
+    const match = source.match(/^(.*?)(?:\s+\(([^()]*)\))?$/);
+    const base = match?.[1] || source;
+    const conditional = match?.[2];
+    const name = locationNames[region]?.[base] || locationNames.shared[base] || base;
+    const suffix = conditional
+      ? ` (${conditional.split("/").map((token) => conditionNames[token.trim()] || token.trim()).join("/")})`
+      : "";
+    return name + suffix;
+  }
+  function locationMethod(value) {
+    const source = String(value ?? "");
+    return language === "en" ? (encounterMethods[source] || source) : source;
+  }
+  function locationRarity(value) {
+    const source = String(value ?? "");
+    return language === "en" ? (encounterRarities[source] || source) : source;
+  }
+  function locationLevel(value) {
+    const source = String(value ?? "");
+    return language === "en" ? source.replace(/^Niveau\b/i, "Level") : source;
+  }
+
   window.DexI18n = Object.freeze({
     get language() { return language; },
     t: translate,
@@ -553,6 +786,11 @@
     pokemonName,
     pokemonTerm,
     evolutionMethod,
+    regionLabel,
+    locationName,
+    locationMethod,
+    locationRarity,
+    locationLevel,
     setLanguage,
     applyLanguage
   });
