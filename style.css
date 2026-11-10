@@ -121,6 +121,14 @@ h2 {
   margin-top: 30px;
 }
 
+/* Le filtre global sert aux fiches Pokémon et Dresseurs uniquement.
+   EV et XP ont chacun leur propre sélection de région.
+   Masquer le bloc ne change pas la région globale mémorisée à l'écran. */
+.ev-mode .region-section,
+.xp-mode .region-section {
+  display: none;
+}
+
 .region-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -2280,7 +2288,7 @@ h1 {
   margin-top: 9px;
 }
 
-#evZoneSearch {
+#evZoneSearch, #xpZoneSearch {
   flex: 1 1 320px;
   min-width: 140px;
   padding: 8px 10px;
@@ -2293,7 +2301,7 @@ h1 {
   font-size: 0.74rem;
 }
 
-#evZoneSearch:focus {
+#evZoneSearch:focus, #xpZoneSearch:focus {
   border-color: rgba(93, 178, 255, 0.45);
 }
 
@@ -2500,3 +2508,192 @@ h1 {
     max-width: 100%;
   }
 }
+
+/* =========================================================
+   V2.1 — Recherche XP (niveaux, STAB et risques potentiels)
+   ========================================================= */
+.xp-mode {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 1180px;
+}
+.xp-mode .pins-panel { display: none; }
+.xp-search-panel { margin-top: 17px; }
+.xp-identity-controls {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.6fr) minmax(105px, .5fr) minmax(185px, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+.xp-input-block {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+.xp-identity-controls > .xp-input-block {
+  padding: 12px 13px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(32, 37, 48, .68);
+}
+.xp-input-block > label { font-size: .8rem; font-weight: 800; }
+.xp-input-block input,
+.xp-input-block select {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #303744;
+  border-radius: 10px;
+  background: #10131a;
+  color: var(--text);
+  min-height: 42px;
+  padding: 10px 11px;
+  font: inherit;
+  font-size: .9rem;
+}
+.xp-input-block select:disabled { opacity: .6; }
+.xp-input-block input:focus,
+.xp-input-block select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.xp-picker .suggestions { max-height: 320px; overflow-y: auto; }
+.xp-assumption { font-size: .79rem; color: var(--muted); margin: 8px 2px 0; }
+.xp-condition-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+.xp-options { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.xp-options input { flex: 0 0 auto; margin-top: 3px; accent-color: var(--accent); }
+.xp-options .ev-option-check input:disabled + span { opacity: .6; }
+.xp-disclaimer { margin: 9px 2px 0; font-size: .74rem; line-height: 1.5; color: var(--muted); }
+.xp-results { display: grid; gap: 10px; margin-top: 13px; }
+.xp-zone-card {
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: rgba(32, 37, 48, .7);
+  min-width: 0;
+}
+.xp-zone-card.recommended { border-color: rgba(89, 210, 137, .35); }
+.xp-zone-card > summary {
+  list-style: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  cursor: pointer;
+}
+.xp-zone-card > summary::-webkit-details-marker { display: none; }
+.xp-zone-card > summary:hover { background: rgba(255,255,255,.025); }
+.xp-zone-card > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.xp-heading-row { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 7px; }
+.xp-heading-row > strong { font-size: .98rem; }
+.xp-compact-badge {
+  display: inline-block;
+  padding: 4px 7px;
+  color: var(--muted);
+  border: 1px solid #303744;
+  border-radius: 999px;
+  background: #151920;
+  font-size: .72rem;
+}
+.xp-zone-track { height: 7px; border-radius: 99px; background: #121821; overflow: hidden; margin: 10px 0 7px; }
+.xp-zone-track > span { display: block; height: 100%; border-radius: inherit; background: #63d68f; }
+.xp-zone-info > small { display: block; color: var(--muted); font-size: .75rem; }
+.xp-zone-info > small strong { color: var(--text); }
+.xp-threat-count { color: #f2bd79; font-weight: 800; }
+.xp-score { min-width: 122px; display: flex; align-items: flex-end; flex-direction: column; gap: 2px; text-align: right; }
+.xp-score > strong { font-size: 1.5rem; color: #77e3a1; font-variant-numeric: tabular-nums; }
+.xp-score > span, .xp-score > small { font-size: .7rem; color: var(--muted); }
+.xp-zone-body { border-top: 1px solid var(--border); padding: 11px 14px 14px; }
+.xp-zone-metrics { display: flex; gap: 8px 18px; flex-wrap: wrap; padding: 0 0 11px; font-size: .78rem; color: var(--muted); }
+.xp-zone-metrics strong { color: var(--text); }
+.xp-species-list { display: grid; gap: 6px; }
+.xp-species-row {
+  display: grid;
+  grid-template-columns: minmax(170px, 1fr) minmax(0, 1.55fr);
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  border: 1px solid #303744;
+  border-radius: 10px;
+  background: #151920;
+  padding: 7px 10px;
+}
+.xp-species-name { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.xp-species-name img { object-fit: contain; flex: 0 0 auto; }
+.xp-species-name > span { display: flex; flex-direction: column; min-width: 0; gap: 3px; }
+.xp-species-name strong { overflow-wrap: anywhere; font-size: .83rem; }
+.xp-species-name small { color: var(--muted); font-size: .68rem; }
+.xp-species-info { display: flex; justify-content: flex-end; flex-wrap: wrap; align-items: center; gap: 6px; }
+.xp-match { border: 1px solid #323d4a; padding: 5px 7px; border-radius: 8px; white-space: nowrap; font-size: .76rem; font-weight: 800; }
+.xp-match.good { border-color: #356b50; color: #87e7ac; background: #19352a; }
+.xp-match.neutral { color: #b2c0d2; }
+.xp-match.hard { color: #efc381; background: #372a1b; }
+.xp-match.immune { color: #ef8e8e; background: #381f25; }
+.xp-small-meta { font-size: .73rem; color: var(--muted); white-space: nowrap; }
+.xp-level-alert { color: #f5b37a; margin-left: 3px; font-weight: 700; }
+.xp-low-level { color: #a6b1c1; margin-left: 3px; }
+.xp-warning-wrap { display: inline-flex; position: relative; flex: 0 0 auto; }
+.xp-warning-btn {
+  padding: 5px 7px;
+  background: #35291d;
+  border: 1px solid #9f7043;
+  color: #ffd398;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: .76rem;
+  font-weight: 850;
+}
+.xp-warning-btn.severe { background: #3b2025; border-color: #a65258; color: #ff9ca1; }
+.xp-warning-btn:hover, .xp-warning-btn:focus-visible { outline: 2px solid #efc381; outline-offset: 2px; }
+.xp-warning-popover {
+  display: none;
+  position: absolute;
+  width: min(265px, 75vw);
+  bottom: calc(100% + 8px);
+  right: 0;
+  z-index: 31;
+  border-radius: 10px;
+  background: #29303d;
+  color: #f4f5f7;
+  border: 1px solid #5d6a7c;
+  box-shadow: 0 9px 25px rgba(0,0,0,.55);
+  padding: 10px 12px;
+  font-size: .76rem;
+  font-weight: 500;
+  line-height: 1.45;
+  white-space: normal;
+  text-align: left;
+}
+.xp-warning-wrap.open .xp-warning-popover { display: block; }
+@media (hover: hover) { .xp-warning-wrap:hover .xp-warning-popover { display: block; } }
+.xp-more {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #1c2630;
+  color: var(--text);
+  padding: 12px;
+  font-weight: 800;
+}
+.xp-more:hover { border-color: var(--accent); }
+/* Enable all four tabs on small screens without horizontal page overflow. */
+.search-mode-tabs { max-width: 100%; flex-wrap: wrap; }
+@media (max-width: 800px) {
+  .xp-identity-controls { grid-template-columns: minmax(0, 1fr) 110px; }
+  .xp-type-field { grid-column: 1 / -1; }
+  .xp-options { grid-template-columns: 1fr; }
+  .xp-species-row { grid-template-columns: minmax(0, 1fr); gap: 7px; }
+  .xp-species-info { justify-content: flex-start; }
+}
+@media (max-width: 520px) {
+  .xp-identity-controls { grid-template-columns: minmax(0, 1fr); }
+  .xp-type-field { grid-column: auto; }
+  .xp-condition-row { grid-template-columns: minmax(0, 1fr); }
+  .xp-zone-card > summary { grid-template-columns: minmax(0, 1fr); gap: 7px; }
+  .xp-score { align-items: flex-start; flex-direction: row; min-width: 0; gap: 8px; text-align: left; align-items: baseline; }
+  .xp-score > strong { font-size: 1.2rem; }
+  .xp-score > span { font-size: .67rem; }
+  .xp-score > small { margin-left: auto; }
+  .mode-btn { padding: 7px 9px; }
+}
+
+/* Les routes restent sur une liste compacte, ordonnée par progression. */
+.zone-progress-note { margin: 1px 0 8px; }

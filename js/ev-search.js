@@ -509,7 +509,7 @@
   });
 
   for (const [region, zones] of zonesByRegion) {
-    zonesByRegion.set(region, [...zones].filter(Boolean).sort(naturalZoneSort));
+    zonesByRegion.set(region, window.DexZoneProgress.sort(region, [...zones].filter(Boolean)));
   }
 
   function rarityWeight(rarity) {

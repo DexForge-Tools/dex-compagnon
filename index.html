@@ -27,7 +27,7 @@
               <option value="en">🇬🇧 English</option>
             </select>
           </label>
-          <span class="version">V2.0 β7</span>
+          <span class="version">V2.1 β4</span>
         </div>
       </header>
 
@@ -50,6 +50,7 @@
           <button class="mode-btn active" type="button" data-mode="pokemon">Pokémon</button>
           <button class="mode-btn" type="button" data-mode="trainer" data-i18n="mode.trainers">Dresseurs</button>
           <button class="mode-btn" type="button" data-mode="ev" data-i18n="mode.ev">Recherche EV</button>
+          <button class="mode-btn" type="button" data-mode="xp" data-i18n="mode.xp">Recherche XP</button>
         </div>
       </section>
 
@@ -253,6 +254,9 @@
                 </div>
               </div>
 
+              <p class="ev-progress-help zone-progress-note" data-i18n="ev.progressOrder">
+                Lieux classés dans l’ordre indicatif de l’aventure, avec les détours facultatifs.
+              </p>
               <div class="ev-zone-select-list" id="evZoneSelectList"></div>
 
               <p class="ev-progress-help" data-i18n="ev.savedHelp">
@@ -267,6 +271,148 @@
         </div>
 
         <div class="ev-results" id="evResults"></div>
+      </section>
+
+      <!-- Recherche XP : score de compatibilité par type, niveau et EXP de base. -->
+      <section class="xp-search-panel hidden" id="xpSearchSection" aria-labelledby="xpHeading">
+        <div class="ev-search-head">
+          <div>
+            <span class="section-label" data-i18n="xp.title">OPTIMISATION XP</span>
+            <h2 id="xpHeading" data-i18n="xp.heading">Où entraîner mon Pokémon ?</h2>
+            <p data-i18n="xp.intro">Sélectionne ton Pokémon et son niveau. Nous supposons qu'il possède une attaque de son type (bonus STAB), puis cherchons les zones avec des adversaires vulnérables.</p>
+          </div>
+        </div>
+
+        <div class="xp-identity-controls">
+          <div class="xp-input-block">
+            <label for="xpPokemonSearch" data-i18n="xp.pokemon">Pokémon à entraîner</label>
+            <div class="search-wrap xp-picker">
+              <input id="xpPokemonSearch" type="search" autocomplete="off" role="combobox"
+                aria-autocomplete="list" aria-controls="xpSuggestions" aria-expanded="false"
+                placeholder="Ex. Magicarpe, Léviator, #129..." data-i18n-placeholder="xp.placeholder">
+              <div class="suggestions hidden" id="xpSuggestions" role="listbox"></div>
+            </div>
+          </div>
+          <div class="xp-input-block xp-level-field">
+            <label for="xpLevel" data-i18n="xp.level">Niveau actuel</label>
+            <input id="xpLevel" type="number" min="1" max="100" step="1" value="15" inputmode="numeric">
+          </div>
+          <div class="xp-input-block xp-type-field">
+            <label for="xpAttackType" data-i18n="xp.attack">Type d'attaque supposé</label>
+            <select id="xpAttackType" disabled>
+              <option value="auto" data-i18n="xp.auto">Automatique (meilleur STAB)</option>
+            </select>
+          </div>
+        </div>
+        <p class="xp-assumption" id="xpAssumption" data-i18n="xp.choose">Choisis un Pokémon pour lancer l'analyse.</p>
+
+        <div class="ev-filter-panel">
+          <div class="ev-filter-block">
+            <div class="ev-filter-title-row">
+              <strong data-i18n="common.region">Région</strong>
+              <small data-i18n="xp.regionHelp">Filtre propre à la recherche XP</small>
+            </div>
+            <div class="ev-filter-chips" id="xpRegionFilters">
+              <button type="button" class="ev-filter-chip active" data-xp-region="all" data-i18n="common.all">Toutes</button>
+              <button type="button" class="ev-filter-chip" data-xp-region="kanto">Kanto</button>
+              <button type="button" class="ev-filter-chip" data-xp-region="hoenn">Hoenn</button>
+              <button type="button" class="ev-filter-chip" data-xp-region="sinnoh">Sinnoh</button>
+              <button type="button" class="ev-filter-chip" data-xp-region="unys" data-i18n="region.unys">Unys</button>
+              <button type="button" class="ev-filter-chip" data-xp-region="johto">Johto</button>
+            </div>
+          </div>
+          <div class="ev-filter-block">
+            <div class="ev-filter-title-row">
+              <strong data-i18n="xp.methods">Méthodes de rencontre</strong>
+              <div class="ev-filter-actions">
+                <button type="button" id="xpMethodsAll" data-i18n="common.allShort">Tout</button>
+                <button type="button" id="xpMethodsNone" data-i18n="common.none">Aucun</button>
+              </div>
+            </div>
+            <div class="ev-method-grid" id="xpMethodFilters"></div>
+          </div>
+          <div class="ev-filter-block">
+            <div class="ev-filter-title-row">
+              <strong data-i18n="xp.conditions">Période et saison</strong>
+              <small data-i18n="xp.conditionHelp">Les rencontres sans précision de période ou de saison sont toujours incluses.</small>
+            </div>
+            <div class="xp-condition-row">
+              <div class="xp-input-block">
+                <label for="xpPeriod" data-i18n="ev.period">Période</label>
+                <select id="xpPeriod">
+                  <option value="all" data-i18n="common.all">Toutes</option>
+                  <option value="morning" data-i18n="ev.morning">Matin</option>
+                  <option value="day" data-i18n="ev.day">Jour</option>
+                  <option value="night" data-i18n="ev.night">Nuit</option>
+                </select>
+              </div>
+              <div class="xp-input-block">
+                <label for="xpSeason" data-i18n="ev.season">Saison</label>
+                <select id="xpSeason">
+                  <option value="auto" data-i18n="xp.seasonAuto">Auto (date du navigateur)</option>
+                  <option value="all" data-i18n="common.all">Toutes</option>
+                  <option value="spring" data-i18n="ev.spring">Printemps</option>
+                  <option value="summer" data-i18n="ev.summer">Été</option>
+                  <option value="autumn" data-i18n="ev.autumn">Automne</option>
+                  <option value="winter" data-i18n="ev.winter">Hiver</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="ev-filter-block xp-options">
+            <label class="ev-option-check">
+              <input type="checkbox" id="xpSuitableOnly" checked>
+              <span>
+                <strong data-i18n="xp.suitable">Privilégier les niveaux adaptés</strong>
+                <small data-i18n="xp.suitableHelp">Masque les zones sans adversaire favorable proche de ton niveau. Les autres espèces de la zone restent visibles.</small>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Progression XP : indépendante de la progression de Recherche EV. -->
+        <div class="ev-progress-panel xp-progress-panel" id="xpProgressPanel">
+          <div class="ev-progress-placeholder" id="xpProgressPlaceholder" data-i18n="xp.chooseRegion">
+            Choisis une région précise pour gérer tes zones accessibles en Recherche XP.
+          </div>
+          <div class="ev-progress-content hidden" id="xpProgressContent">
+            <div class="ev-progress-head">
+              <label class="ev-progress-toggle">
+                <input type="checkbox" id="xpUnlockedOnly">
+                <span>
+                  <strong data-i18n="xp.unlocked">Uniquement mes zones débloquées</strong>
+                  <small id="xpUnlockedHelp">Tes zones XP sont enregistrées séparément de celles de Recherche EV.</small>
+                </span>
+              </label>
+              <span class="ev-progress-count" id="xpProgressCount">0/0 zones</span>
+            </div>
+            <details class="ev-progress-details" id="xpProgressDetails">
+              <summary data-i18n="xp.routes">Choisir mes routes / emplacements accessibles pour l'XP</summary>
+              <div class="ev-progress-tools">
+                <input type="search" id="xpZoneSearch" data-i18n-placeholder="xp.zonePlaceholder"
+                  placeholder="Rechercher une route, une ville, une grotte..." autocomplete="off">
+                <div class="ev-filter-actions">
+                  <button type="button" id="xpZonesAll" data-i18n="ev.selectAll">Tout cocher</button>
+                  <button type="button" id="xpZonesNone" data-i18n="ev.clearAll">Tout décocher</button>
+                </div>
+              </div>
+              <p class="ev-progress-help zone-progress-note" data-i18n="xp.progressOrder">
+                Lieux classés dans l’ordre indicatif de l’aventure, avec les détours facultatifs.
+              </p>
+              <div class="ev-zone-select-list" id="xpZoneSelectList"></div>
+              <p class="ev-progress-help" data-i18n="xp.savedHelp">
+                Ces choix sont propres à Recherche XP et ne modifient jamais ceux de Recherche EV.
+              </p>
+            </details>
+          </div>
+        </div>
+
+        <div class="ev-search-summary" id="xpSearchSummary" role="status" aria-live="polite">
+          Choisis un Pokémon pour lancer l'analyse.
+        </div>
+        <p class="xp-disclaimer" data-i18n="xp.disclaimer">Le pourcentage compte les espèces présentes (pas leur fréquence réelle). Les alertes ⚠ signalent les faiblesses de type potentielles, sans vérifier les attaques connues. L'EXP de base n'est pas le gain réel d'un combat.</p>
+        <div class="xp-results" id="xpResults"></div>
+        <button type="button" class="xp-more hidden" id="xpShowMore" data-i18n="xp.more">Afficher plus de zones</button>
       </section>
 
       <section class="empty-state" id="emptyState">
@@ -432,6 +578,8 @@
 
   <script src="js/pokemon-status.js"></script>
   <script src="js/trainer-app.js"></script>
+  <script src="js/zone-progress.js"></script>
   <script src="js/ev-search.js"></script>
+  <script src="js/xp-search.js"></script>
 </body>
 </html>

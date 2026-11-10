@@ -13,3 +13,15 @@ Ce projet n'est affilié, approuvé ou soutenu ni par Nintendo, ni par The Poké
 Les noms, visuels et contenus tiers restent soumis aux droits de leurs titulaires ; ce dépôt ne revendique aucune affiliation officielle ni aucune licence implicite sur eux. Vérifier les droits de diffusion des données et images avant publication.
 
 Le nom « Dex Compagnon » est provisoire.
+
+
+## Recherche XP
+
+L'onglet Recherche XP permet de comparer les lieux d'entraînement selon les
+faiblesses de type des espèces sauvages, leur niveau et leur EXP de base. Il
+suppose une attaque de même type que le Pokémon sélectionné, et signale
+les risques de type potentiels avec ⚠. Ce sont des indications, pas une mesure
+d'EXP par heure ni une garantie sur les attaques possédées.
+
+Les zones débloquées et leur filtre sont enregistrés séparément dans Recherche XP.
+Aucun choix effectué dans Recherche XP ne change les réglages de Recherche EV.
