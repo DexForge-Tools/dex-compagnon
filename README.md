@@ -25,3 +25,38 @@ d'EXP par heure ni une garantie sur les attaques possédées.
 
 Les zones débloquées et leur filtre sont enregistrés séparément dans Recherche XP.
 Aucun choix effectué dans Recherche XP ne change les réglages de Recherche EV.
+
+## Sélection des zones — V2.1 β5
+
+Dans Recherche EV et Recherche XP, le sélecteur **Normal / Simplifié** apparaît
+à côté du titre des routes accessibles. Le mode simplifié regroupe les lieux
+par étape indicative de l'aventure. On peut cocher une étape entière ou
+déplier son titre pour choisir des lieux individuellement. Les cases EV et XP
+ainsi que les modes d'affichage sont sauvegardés indépendamment dans le navigateur.
+
+### Recherche XP — EV en parallèle (V2.1 β6)
+
+Les résultats XP indiquent aussi les EV de base donnés par chaque Pokémon
+sauvage. Le filtre EV facultatif permet de privilégier un EV parmi les six
+statistiques pendant l'entraînement XP, sans masquer les espèces donnant
+d'autres EV et sans modifier les paramètres de Recherche EV. Les classements
+restent indicatifs (espèces présentes, pas de taux de rencontre réels).
+
+### Recherche XP — Double EV et régions multiples (V2.1 β7)
+
+Le filtre EV de Recherche XP accepte jusqu'à **deux statistiques en même temps**.
+Les zones contenant au moins une des statistiques choisies restent proposées,
+avec une préférence pour les zones utiles aux deux. Le mode sans EV conserve
+le classement XP standard.
+
+Il est aussi possible de rechercher sur **plusieurs régions à la fois**. Dans
+« Choisir mes routes », une liste permet de configurer les routes accessibles
+pour chaque région sélectionnée, indépendamment de la progression EV.
+
+### Navigation EV / XP — V2.1 β8
+
+Le retour depuis une fiche Pokémon conserve la route ouverte et la position de
+lecture des recherches EV et XP. La petite épingle 📌 place temporairement une
+route en tête des résultats, sans modifier son score. Dans Recherche XP, les
+noms et sprites des Pokémon sauvages ouvrent désormais leurs fiches Pokémon.
+Les épingles EV et XP sont indépendantes.

@@ -20,6 +20,10 @@
   const periodInput = document.querySelector("#xpPeriod");
   const seasonInput = document.querySelector("#xpSeason");
   const suitableOnly = document.querySelector("#xpSuitableOnly");
+  const evFilters = document.querySelector("#xpEvFilters");
+  const evSelectionCount = document.querySelector("#xpEvSelectionCount");
+  const zoneRegionRow = document.querySelector("#xpZoneRegionRow");
+  const zoneRegionSelect = document.querySelector("#xpZoneRegionSelect");
   const unlockedOnly = document.querySelector("#xpUnlockedOnly");
   const unlockedHelp = document.querySelector("#xpUnlockedHelp");
   const progressPlaceholder = document.querySelector("#xpProgressPlaceholder");
@@ -29,15 +33,45 @@
   const zoneChoices = document.querySelector("#xpZoneSelectList");
   const zonesAll = document.querySelector("#xpZonesAll");
   const zonesNone = document.querySelector("#xpZonesNone");
+  const zonePicker = window.DexZoneProgress.createPicker({
+    list: zoneChoices,
+    normalButton: document.querySelector("#xpZoneViewNormal"),
+    simpleButton: document.querySelector("#xpZoneViewSimple"),
+    storageKey: "dexCompagnonXpZoneViewV1",
+    getSelected: () => new Set(unlockedList()),
+    getLabel: (region, zone) => zoneLabel(region, zone),
+    onSelectionChange: zones => saveZones(zones)
+  });
   // Clés XP distinctes : aucune lecture ni écriture du stockage de Recherche EV.
   const XP_ZONES_STORAGE_KEY = "dexCompagnonXpUnlockedZonesV1";
   const XP_FILTER_STORAGE_KEY = "dexCompagnonXpUnlockedFilterV1";
+  const XP_EV_STORAGE_KEY = "dexCompagnonXpEvFilterV1"; // Lecture de l'ancien choix unique, écriture d'un tableau.
+  const XP_REGIONS_STORAGE_KEY = "dexCompagnonXpRegionsV2";
+  const XP_UNLOCKED_ACTIVE_KEY = "dexCompagnonXpUnlockedOnlyV2";
+  const EV_STATS = ["PV", "Attaque", "Défense", "Attaque Spéciale", "Défense Spéciale", "Vitesse"];
+  const EV_SHORT_FR = { "PV": "PV", "Attaque": "Attaque", "Défense": "Défense", "Attaque Spéciale": "Att. Spé.", "Défense Spéciale": "Déf. Spé.", "Vitesse": "Vitesse" };
+  const EV_SHORT_EN = { "PV": "HP", "Attaque": "Attack", "Défense": "Defense", "Attaque Spéciale": "Sp. Atk", "Défense Spéciale": "Sp. Def", "Vitesse": "Speed" };
   const t = () => window.DexI18n?.language === "en" ? EN : FR;
   const txt = (key) => t()[key] || key;
   const label = (p) => window.DexI18n?.pokemonName(p) || p.nom;
   const typeLabel = (type) => window.DexI18n?.pokemonTerm?.("type", type) || type;
   const zoneLabel = (region, zone) => window.DexI18n?.locationName?.(region, zone) || zone;
   const regionLabel = (region) => window.DexI18n?.regionLabel?.(region) || region;
+  const evShortLabel = stat => (window.DexI18n?.language === "en" ? EV_SHORT_EN : EV_SHORT_FR)[stat] || stat;
+  const evValue = (pokemon, stat) => Math.max(0, Number(pokemon.ev?.[stat] || 0));
+  function refreshEvChips() {
+    evFilters.querySelectorAll("[data-xp-ev]").forEach(btn => {
+      const active = btn.dataset.xpEv === "all" ? !evTargets.length : evTargets.includes(btn.dataset.xpEv);
+      btn.classList.toggle("active", active);
+      btn.setAttribute("aria-pressed", String(active));
+      btn.disabled = evTargets.length === 2 && btn.dataset.xpEv !== "all" && !active;
+    });
+    evSelectionCount.textContent = `${evTargets.length}/2 EV`;
+  }
+  const targetingEvs = () => evTargets.length > 0;
+  const evMatch = p => evTargets.some(stat => evValue(p, stat) > 0);
+  const evMatchCount = p => evTargets.filter(stat => evValue(p, stat) > 0).length;
+  const evMatchAmount = p => evTargets.reduce((sum, stat) => sum + evValue(p, stat), 0);
   const methodLabel = (method) => {
     const translated = window.DexI18n?.locationMethod?.(method);
     return window.DexI18n?.language === "en" && (!translated || translated === method)
@@ -49,7 +83,7 @@
     select: "Choisis un Pokémon dans les suggestions pour lancer la recherche.",
     level: "Saisis un niveau entier entre 1 et 100.",
     noMethod: "Sélectionne au moins une méthode de rencontre.",
-    noZones: "Aucune zone XP cochée pour cette région. Sélectionne tes zones ci-dessus.",
+    noZones: "Aucune zone XP cochée dans les régions sélectionnées. Configure leurs routes ci-dessus.",
     noResults: "Aucune zone compatible avec ces filtres. Essaie une autre région, méthode ou désactive le filtre de niveau.",
     regions: "toutes les régions", zones: "zones", zone: "zone", found: "trouvées", for: "pour", levelName: "niveau",
     favorable: "favorables", species: "espèces", score: "Score XP", average: "EXP de base moy.",
@@ -61,15 +95,21 @@
     usedType: "Types STAB supposés", auto: "Auto (meilleur des types)",
     all: "Toutes", approx: "Classement indicatif basé sur la couverture des faiblesses, les niveaux et l'EXP de base, pas l'EXP/heure.",
     progress: "Zones XP enregistrées", progressHelp: "Tes zones XP sont indépendantes des zones EV.",
+    progressHelpMulti: "Filtre sur toutes les régions cochées ; zones XP indépendantes des zones EV.",
     filterUnavailable: "Aucune zone XP cochée dans cette région.",
     before: "L'attaque", after: "est supposée disponible : nous ne vérifions pas les capacités apprises.",
-    allTypes: "Attaque STAB", noSuitable: "Hors tranche", dangerType: "Type menaçant", percent: "des espèces vulnérables"
+    allTypes: "Attaque STAB", noSuitable: "Hors tranche", dangerType: "Type menaçant", percent: "des espèces vulnérables",
+    evScore: "Score XP + EV", evTarget: "EV visé", evTargets: "EV visés", evSpecies: "espèces donnent cet EV",
+    evIdeal: "favorables et adaptées", evNone: "EV non renseignés",
+    evFilterNoResults: "Aucune zone ne correspond à cet EV avec les autres filtres. Essaie une autre région, une autre méthode ou désactive le filtre de niveau.",
+    evFiltered: "Classement XP + EV : zones favorisées selon les EV choisis, les faiblesses et les niveaux. Les autres espèces restent visibles.",
+    pin: "Épingler cette zone en haut", unpin: "Retirer cette zone des épingles"
   };
   const EN = {
     select: "Choose a Pokémon from the suggestions to start searching.",
     level: "Enter a whole number from 1 to 100.",
     noMethod: "Select at least one encounter method.",
-    noZones: "No XP areas selected in this region. Select your areas above.",
+    noZones: "No XP areas selected in the chosen regions. Configure their routes above.",
     noResults: "No matching area with these filters. Try another region or method, or turn off the level filter.",
     regions: "all regions", zones: "areas", zone: "area", found: "found", for: "for", levelName: "level",
     favorable: "favorable", species: "species", score: "XP score", average: "Avg. base EXP",
@@ -81,9 +121,15 @@
     usedType: "Assumed STAB types", auto: "Auto (best matching type)",
     all: "All", approx: "Indicative ranking based on type advantage, levels and base EXP, not EXP/hour.",
     progress: "Saved XP areas", progressHelp: "Your XP areas are independent of EV areas.",
+    progressHelpMulti: "Filters every selected region; XP areas remain separate from EV areas.",
     filterUnavailable: "No XP areas selected in this region.",
     before: "A", after: "attack is assumed to be available; learned moves are not checked.",
-    allTypes: "STAB attack", noSuitable: "Out of range", dangerType: "Threatening type", percent: "of wild species vulnerable"
+    allTypes: "STAB attack", noSuitable: "Out of range", dangerType: "Threatening type", percent: "of wild species vulnerable",
+    evScore: "XP + EV score", evTarget: "Target EV", evTargets: "Target EVs", evSpecies: "species yield this EV",
+    evIdeal: "favorable and level-suitable", evNone: "No EV data",
+    evFilterNoResults: "No areas match this EV and the other filters. Try another region or method, or turn off the level filter.",
+    evFiltered: "XP + EV ranking: areas favor the selected EVs, type matchup and levels. Other species remain visible.",
+    pin: "Pin this area to the top", unpin: "Unpin this area"
   };
   const METHOD_EN = {
     "Herbes":"Grass", "Herbes sombres":"Dark grass", "Grotte":"Cave", "Canne":"Old Rod",
@@ -96,9 +142,34 @@
   const REGION_NAMES = ["kanto", "hoenn", "sinnoh", "unys", "johto"];
   const BATCH = 25;
   let chosen = null;
-  let region = "all"; // Chaque onglet possède son propre filtre régional.
+  let evTargets = [];
+  try {
+    const saved = localStorage.getItem(XP_EV_STORAGE_KEY);
+    // Compatibilité : la β6 enregistrait un seul nom d'EV, pas un tableau.
+    let values;
+    try { values = JSON.parse(saved); } catch { values = saved; }
+    if (Array.isArray(values)) evTargets = [...new Set(values.filter(stat => EV_STATS.includes(stat)))].slice(0, 2);
+    else if (EV_STATS.includes(values)) evTargets = [values];
+  } catch { /* Le filtre reste disponible sans stockage local. */ }
+  let selectedRegions = new Set(REGION_NAMES);
+  try {
+    const saved = JSON.parse(localStorage.getItem(XP_REGIONS_STORAGE_KEY) || "null");
+    if (Array.isArray(saved)) {
+      const valid = saved.filter(value => REGION_NAMES.includes(value));
+      if (valid.length) selectedRegions = new Set(valid);
+    }
+  } catch { /* Par défaut : les cinq régions. */ }
+  // Si l'utilisateur a coché les cinq régions une à une, un clic sur une
+  // seule région la décoche ; « Toutes » sélectionne explicitement tout.
+  let explicitAllRegions = selectedRegions.size === REGION_NAMES.length;
+  let editorRegion = selectedRegions.has("sinnoh") ? "sinnoh" : [...selectedRegions][0];
   let allGroups = [];
   let visibleCount = BATCH;
+  const xpOpenZoneKeys = new Set();
+  let xpPinnedKey = null;
+  let xpHasRendered = false;
+  let xpReturnScrollY = null;
+  const xpZoneKey = group => JSON.stringify([group.region, group.zone, group.method]);
   let focusIndex = -1;
   let possibleMatches = [];
 
@@ -163,68 +234,62 @@
     catch { /* Fonctionne également sans stockage local. */ }
   }
   const unlockedByRegion = readXpSettings(XP_ZONES_STORAGE_KEY);
-  const filterByRegion = readXpSettings(XP_FILTER_STORAGE_KEY);
+  const oldFilterByRegion = readXpSettings(XP_FILTER_STORAGE_KEY);
+  // Dans la β7, « mes zones débloquées » s'applique à chaque région choisie.
+  // Reprend l'ancien état si une seule région était déjà utilisée.
+  try {
+    const saved = localStorage.getItem(XP_UNLOCKED_ACTIVE_KEY);
+    unlockedOnly.checked = saved === null
+      ? (selectedRegions.size === 1 && !!oldFilterByRegion[[...selectedRegions][0]])
+      : saved === "true";
+  } catch { unlockedOnly.checked = false; }
   const zonesByRegion = new Map(REGION_NAMES.map(r => [r, window.DexZoneProgress.sort(r,
     [...new Set(encounters.filter(e => e.region === r).map(e => e.zone))])]));
 
-  function unlockedList() {
-    if (region === "all") return [];
+  function unlockedList(region = editorRegion) {
     return Array.isArray(unlockedByRegion[region]) ? unlockedByRegion[region] : [];
   }
   function filterZoneChoices() {
-    const query = normal(zoneSearch.value);
-    zoneChoices.querySelectorAll(".ev-zone-choice").forEach(choice => {
-      choice.classList.toggle("hidden-by-search", !!query &&
-        !normal(choice.dataset.zone).includes(query) &&
-        !normal(zoneLabel(region, choice.dataset.zone)).includes(query));
+    zonePicker.filter(zoneSearch.value);
+  }
+  function refreshRegionChips() {
+    regionFilters.querySelectorAll("[data-xp-region]").forEach(btn => {
+      const active = btn.dataset.xpRegion === "all"
+        ? selectedRegions.size === REGION_NAMES.length : selectedRegions.has(btn.dataset.xpRegion);
+      btn.classList.toggle("active", active);
+      btn.setAttribute("aria-pressed", String(active));
     });
   }
   function updateProgressCount() {
-    const all = zonesByRegion.get(region) || [];
+    const all = zonesByRegion.get(editorRegion) || [];
     const selected = new Set(unlockedList());
     const count = all.filter(zone => selected.has(zone)).length;
     progressCount.textContent = `${count}/${all.length} ${count === 1 ? txt("zone") : txt("zones")}`;
-    unlockedHelp.textContent = `${regionLabel(region)} — ${txt("progressHelp")}`;
+    unlockedHelp.textContent = selectedRegions.size > 1 ? txt("progressHelpMulti")
+      : `${regionLabel(editorRegion)} — ${txt("progressHelp")}`;
   }
   function saveZones(zones) {
-    unlockedByRegion[region] = [...new Set(zones)];
+    unlockedByRegion[editorRegion] = [...new Set(zones)];
     saveXpSettings(XP_ZONES_STORAGE_KEY, unlockedByRegion);
     updateProgressCount();
     if (unlockedOnly.checked) render();
   }
   function refreshUnlocked() {
-    if (region === "all") {
-      progressPlaceholder.classList.remove("hidden");
-      progressContent.classList.add("hidden");
-      unlockedOnly.checked = false;
-      zoneChoices.replaceChildren();
-      return;
-    }
     progressPlaceholder.classList.add("hidden");
     progressContent.classList.remove("hidden");
-    const selected = new Set(unlockedList());
-    unlockedOnly.checked = !!filterByRegion[region];
-    zoneChoices.replaceChildren();
-    (zonesByRegion.get(region) || []).forEach(zone => {
-      const row = document.createElement("label");
-      row.className = "ev-zone-choice";
-      row.dataset.zone = zone;
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.value = zone;
-      checkbox.checked = selected.has(zone);
-      const text = document.createElement("span");
-      text.textContent = zoneLabel(region, zone);
-      text.title = text.textContent;
-      checkbox.addEventListener("change", () => {
-        const next = new Set(unlockedList());
-        if (checkbox.checked) next.add(zone); else next.delete(zone);
-        saveZones([...next]);
-      });
-      row.append(checkbox, text);
-      zoneChoices.appendChild(row);
+    if (!selectedRegions.has(editorRegion)) editorRegion = [...selectedRegions][0];
+    zoneRegionRow.classList.toggle("hidden", selectedRegions.size === 1);
+    zoneRegionSelect.replaceChildren();
+    REGION_NAMES.filter(r => selectedRegions.has(r)).forEach(r => {
+      const opt = document.createElement("option");
+      opt.value = r;
+      opt.textContent = regionLabel(r);
+      zoneRegionSelect.appendChild(opt);
     });
+    zoneRegionSelect.value = editorRegion;
     zoneSearch.value = "";
+    zonePicker.filter("");
+    zonePicker.render(editorRegion, zonesByRegion.get(editorRegion) || []);
     updateProgressCount();
   }
   function currentSeason() { return ["spring", "summer", "autumn", "winter"][new Date().getMonth() % 4]; }
@@ -255,11 +320,11 @@
   function groupZones(ownLevel) {
     const groups = new Map();
     const allowed = selectedMethods();
-    const unlocked = unlockedOnly.checked ? new Set(unlockedList()) : null;
+    const unlocked = unlockedOnly.checked ? new Map([...selectedRegions].map(r => [r, new Set(unlockedList(r))])) : null;
     encounters.forEach(e => {
-      if (region !== "all" && e.region !== region) return;
+      if (!selectedRegions.has(e.region)) return;
       if (!allowed.has(e.method) || !allowedCondition(e)) return;
-      if (unlocked && !unlocked.has(e.zone)) return;
+      if (unlocked && !unlocked.get(e.region)?.has(e.zone)) return;
       const key = `${e.region}|${e.zone}|${e.method}`;
       if (!groups.has(key)) groups.set(key, { region: e.region, zone: e.zone, method: e.method, species: new Map() });
       const g = groups.get(key);
@@ -285,6 +350,12 @@
         const lvl = best.levels ? (best.levels[0] + best.levels[1]) / 2 : null;
         return { p: s.p, low, high, atk, fit, lvl, danger: danger(s.p), exp: Number(s.p.exp_donnee || 0), rarity: best.rarity };
       });
+      const evMatching = targetingEvs() ? species.filter(s => evMatch(s.p)) : [];
+      const evIdeal = evMatching.filter(s => s.atk.mult > 1 && s.fit);
+      const evStats = evTargets.map(stat => {
+        const matching = species.filter(s => evValue(s.p, stat) > 0);
+        return { stat, count: matching.length, ideal: matching.filter(s => s.atk.mult > 1 && s.fit).length };
+      });
       const favorable = species.filter(s => s.atk.mult > 1);
       const suitable = species.filter(s => s.fit);
       const suitableFavorable = favorable.filter(s => s.fit);
@@ -299,10 +370,23 @@
       // Small-sample correction: a one-species lure zone should not automatically
       // outrank a diverse regular area just because 1/1 = 100%.
       const conservativeCoverage = (favorable.length + 1) / (species.length + 2);
-      const score = Math.round(100 * (0.56 * conservativeCoverage + 0.22 * levelCoverage + 0.22 * xpQuality));
+      const xpScore = Math.round(100 * (0.56 * conservativeCoverage + 0.22 * levelCoverage + 0.22 * xpQuality));
+      // Le filtre EV ne change pas le pourcentage de faiblesses de type affiché.
+      // Il ajoute une pondération de l'EV voulu au classement XP, sans utiliser
+      // de faux taux de rencontre : les espèces restent équiprobables ici.
+      const evCoverage = species.length ? evStats.reduce((total, item) => total + item.count / species.length, 0) / (evStats.length || 1) : 0;
+      const evIdealCoverage = species.length ? evStats.reduce((total, item) => total + item.ideal / species.length, 0) / (evStats.length || 1) : 0;
+      const evBothCoverage = evStats.length === 2 && species.length
+        ? Math.min(...evStats.map(item => item.count / species.length)) : 0;
+      // Un EV : score de la β6 conservé. Deux EV : bonus si les DEUX sont représentés
+      // dans la zone (pas nécessairement sur le même Pokémon sauvage).
+      const score = !targetingEvs() ? xpScore : evStats.length === 1
+        ? Math.round(100 * (0.40 * xpScore / 100 + 0.30 * evCoverage + 0.30 * evIdealCoverage))
+        : Math.round(100 * (0.40 * xpScore / 100 + 0.22 * evCoverage + 0.22 * evIdealCoverage + 0.16 * evBothCoverage));
       return { ...g, species, favorable, suitableFavorable, pct, avgExp, score,
-        threats: species.filter(s => s.danger).length };
-    }).filter(g => g.favorable.length && (!suitableOnly.checked || g.suitableFavorable.length))
+        evMatching, evIdeal, evStats, threats: species.filter(s => s.danger).length };
+    }).filter(g => g.favorable.length && (!suitableOnly.checked || g.suitableFavorable.length) &&
+      (!targetingEvs() || g.evMatching.length > 0))
       .sort((a, b) => b.score - a.score || b.pct - a.pct || b.avgExp - a.avgExp ||
         zoneLabel(a.region, a.zone).localeCompare(zoneLabel(b.region, b.zone)));
   }
@@ -323,14 +407,24 @@
       <span class="xp-warning-popover" role="tooltip">${esc(message)}</span>
     </span>`;
   }
+  function evMarkup(pokemon) {
+    const yields = EV_STATS.filter(stat => evValue(pokemon, stat) > 0);
+    if (!yields.length) return `<div class="xp-ev-yields xp-ev-missing">${esc(txt("evNone"))}</div>`;
+    return `<div class="xp-ev-yields" aria-label="EV">${yields.map(stat => {
+      const target = targetingEvs() && evTargets.includes(stat);
+      const dimmed = targetingEvs() && !evTargets.includes(stat);
+      return `<span class="xp-ev-badge${target ? " target" : ""}${dimmed ? " off-target" : ""}">EV ${esc(evShortLabel(stat))} +${evValue(pokemon, stat)}</span>`;
+    }).join("")}</div>`;
+  }
   function speciesMarkup(s, level) {
     const state = s.atk.mult > 1 ? "good" : s.atk.mult === 1 ? "neutral" : s.atk.mult === 0 ? "immune" : "hard";
     const levelText = s.low === null ? txt("unknown") : `${s.low}${s.high !== s.low ? `–${s.high}` : ""}`;
     const tooHigh = s.low !== null && s.high > level + 2;
     const tooLow = s.high !== null && s.high < level - 14;
     return `<div class="xp-species-row">
-      <div class="xp-species-name"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${s.p.id}.png" loading="lazy" alt="" width="39" height="39">
-        <span><strong>${esc(label(s.p))}</strong><small>#${String(s.p.id).padStart(3, "0")} · ${s.p.types.map(typeLabel).map(esc).join(" / ")}</small></span></div>
+      <button type="button" class="xp-pokemon-link" data-pokemon-id="${s.p.id}" aria-label="${esc(label(s.p))}"><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${s.p.id}.png" loading="lazy" alt="" width="39" height="39">
+        <span><strong>${esc(label(s.p))}</strong><small>#${String(s.p.id).padStart(3, "0")} · ${s.p.types.map(typeLabel).map(esc).join(" / ")}</small></span></button>
+      ${evMarkup(s.p)}
       <div class="xp-species-info"><span class="xp-match ${state}">${esc(typeLabel(s.atk.type))} ×${esc(fmt(s.atk.mult))}</span>
       <span class="xp-small-meta">${esc(txt("levelName"))} ${esc(levelText)} ${tooHigh ? `<span class="xp-level-alert" title="${esc(txt("levelWarning"))}">↑ ${esc(txt("tooHigh"))}</span>` : tooLow ? `<span class="xp-low-level">↓ ${esc(txt("tooLow"))}</span>` : ""}</span>
       <span class="xp-small-meta">EXP ${fmt(s.exp)}</span>${warningMarkup(s)}</div>
@@ -339,19 +433,41 @@
   function makeCard(g, index, ownLevel) {
     const card = document.createElement("details");
     card.className = "xp-zone-card" + (index < 3 ? " recommended" : "");
+    const zoneKey = xpZoneKey(g);
+    const pinned = zoneKey === xpPinnedKey;
+    card.dataset.zoneKey = zoneKey;
+    card.classList.toggle("zone-pinned", pinned);
+    card.open = xpOpenZoneKeys.has(zoneKey);
     card.innerHTML = `<summary>
       <div class="xp-zone-info"><div class="xp-heading-row"><strong>${index + 1}. ${esc(zoneLabel(g.region, g.zone))}</strong>
+      <button type="button" class="zone-pin-btn" aria-pressed="${pinned}" aria-label="${esc(txt(pinned ? "unpin" : "pin"))}" title="${esc(txt(pinned ? "unpin" : "pin"))}">📌</button>
       <span class="xp-compact-badge">${esc(regionLabel(g.region))}</span><span class="xp-compact-badge">${esc(methodLabel(g.method))}</span></div>
       <div class="xp-zone-track" aria-label="${Math.round(g.pct * 100)} %"><span style="width:${Math.round(g.pct * 100)}%"></span></div>
-      <small><strong>${g.favorable.length}/${g.species.length}</strong> ${esc(txt("favorable"))} · <span>${g.suitableFavorable.length} ${esc(txt("suitable"))}</span>${g.threats ? ` · <span class="xp-threat-count">⚠ ${g.threats}</span>` : ""}</small></div>
-      <div class="xp-score"><strong>${Math.round(g.pct * 100)} %</strong><span>${esc(txt("percent"))}</span><small>${esc(txt("score"))} ${g.score}/100</small></div>
+      <small><strong>${g.favorable.length}/${g.species.length}</strong> ${esc(txt("favorable"))} · <span>${g.suitableFavorable.length} ${esc(txt("suitable"))}</span>${g.threats ? ` · <span class="xp-threat-count">⚠ ${g.threats}</span>` : ""}</small>
+      ${targetingEvs() ? `<small class="xp-ev-zone-count">${g.evStats.map(item => `EV ${esc(evShortLabel(item.stat))} : <strong>${item.count}/${g.species.length}</strong>`).join(" · ")} · ${g.evIdeal.length} ${esc(txt("evIdeal"))}</small>` : ""}</div>
+      <div class="xp-score"><strong>${Math.round(g.pct * 100)} %</strong><span>${esc(txt("percent"))}</span><small>${esc(!targetingEvs() ? txt("score") : txt("evScore"))} ${g.score}/100</small></div>
     </summary><div class="xp-zone-body"><div class="xp-zone-metrics"><span>${esc(txt("average"))} : <strong>${fmt(g.avgExp)}</strong></span><span>${esc(txt("encounters"))} : <strong>${g.species.length}</strong></span></div><div class="xp-species-list"></div></div>`;
-    card.addEventListener("toggle", () => {
-      if (!card.open || card.dataset.built) return;
+    card.querySelector(".zone-pin-btn").addEventListener("click", event => {
+      event.preventDefault();
+      event.stopPropagation();
+      xpPinnedKey = xpPinnedKey === zoneKey ? null : zoneKey;
+      // Reorder without changing the XP ranking or losing open cards.
+      render(true);
+      if (xpPinnedKey) results.querySelector(".xp-zone-card.zone-pinned")?.scrollIntoView({ block: "start" });
+    });
+    const populate = () => {
+      if (card.dataset.built) return;
       card.dataset.built = "true";
       const list = card.querySelector(".xp-species-list");
-      [...g.species].sort((a, b) => b.atk.mult - a.atk.mult || b.exp - a.exp || a.p.id - b.p.id)
+      [...g.species].sort((a, b) => (!targetingEvs() ? 0 :
+        evMatchCount(b.p) - evMatchCount(a.p) || evMatchAmount(b.p) - evMatchAmount(a.p)) ||
+        b.atk.mult - a.atk.mult || b.exp - a.exp || a.p.id - b.p.id)
         .forEach(s => list.insertAdjacentHTML("beforeend", speciesMarkup(s, ownLevel)));
+    };
+    if (card.open) populate();
+    card.addEventListener("toggle", () => {
+      if (card.open) { xpOpenZoneKeys.add(zoneKey); populate(); }
+      else xpOpenZoneKeys.delete(zoneKey);
     });
     return card;
   }
@@ -360,7 +476,7 @@
     const ownLevel = Number(levelInput.value);
     const fragment = document.createDocumentFragment();
     allGroups.slice(results.children.length, visibleCount).forEach((g, i) => {
-      fragment.appendChild(makeCard(g, results.children.length + i, ownLevel));
+      fragment.appendChild(makeCard(g, g.originalRank, ownLevel));
     });
     results.appendChild(fragment);
     more.classList.toggle("hidden", results.children.length >= allGroups.length);
@@ -390,19 +506,24 @@
       ? `${txt("usedType")} : ${chosen.types.map(typeLabel).join(" / ")}. ${txt("after")}`
       : txt("select");
   }
-  function render() {
+  function render(preserveLoadedCount = false) {
     closeWarnings();
     const ownLevel = Number(levelInput.value);
     if (!chosen) return showMessage(txt("select"));
     if (!Number.isInteger(ownLevel) || ownLevel < 1 || ownLevel > 100) return showMessage(txt("level"));
     if (!selectedMethods().size) return showMessage(txt("noMethod"));
-    if (unlockedOnly.checked && !unlockedList().length) return showMessage(txt("noZones"));
-    allGroups = groupZones(ownLevel);
-    visibleCount = BATCH;
+    if (unlockedOnly.checked && ![...selectedRegions].some(r => unlockedList(r).length)) return showMessage(txt("noZones"));
+    allGroups = groupZones(ownLevel).map((group, index) => ({ ...group, originalRank: index }));
+    const pinIndex = allGroups.findIndex(group => xpZoneKey(group) === xpPinnedKey);
+    if (pinIndex > 0) allGroups.unshift(allGroups.splice(pinIndex, 1)[0]);
+    // Filters start from the first page; pinning keeps previously loaded batches.
+    if (preserveLoadedCount !== true) visibleCount = BATCH;
     const areaWord = allGroups.length === 1 ? txt("zone") : txt("zones");
-    summary.textContent = `${allGroups.length} ${areaWord} ${txt("found")} ${txt("for")} ${label(chosen)} (${txt("levelName")} ${ownLevel}), ${region === "all" ? txt("regions") : regionLabel(region)}. ${txt("approx")}`;
+    const regionsText = selectedRegions.size === REGION_NAMES.length ? txt("regions")
+      : REGION_NAMES.filter(r => selectedRegions.has(r)).map(regionLabel).join(" / ");
+    summary.textContent = `${allGroups.length} ${areaWord} ${txt("found")} ${txt("for")} ${label(chosen)} (${txt("levelName")} ${ownLevel}), ${regionsText}. ${!targetingEvs() ? txt("approx") : `${txt(evTargets.length === 2 ? "evTargets" : "evTarget")} : ${evTargets.map(evShortLabel).join(" + ")}. ${txt("evFiltered")}`}`;
     results.replaceChildren();
-    if (!allGroups.length) return showMessage(txt("noResults"));
+    if (!allGroups.length) return showMessage(txt(!targetingEvs() ? "noResults" : "evFilterNoResults"));
     renderSlice();
   }
 
@@ -468,6 +589,15 @@
       if (choice) { event.preventDefault(); selectPokemon(choice); }
     }
   });
+  results.addEventListener("click", event => {
+    const button = event.target.closest(".xp-pokemon-link");
+    if (!button) return;
+    const pokemon = POKEMONS.find(p => p.id === Number(button.dataset.pokemonId));
+    if (!pokemon || typeof window.selectPokemon !== "function") return;
+    switchSearchMode("pokemon");
+    window.selectPokemon(pokemon);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
   document.addEventListener("click", event => {
     if (!event.target.closest(".xp-picker")) hideSuggestions();
     const warning = event.target.closest(".xp-warning-btn");
@@ -478,33 +608,55 @@
     if (!wasOpen) { wrapper.classList.add("open"); warning.setAttribute("aria-expanded", "true"); }
   });
   document.addEventListener("keydown", event => { if (event.key === "Escape") closeWarnings(); });
+  evFilters.addEventListener("click", event => {
+    const button = event.target.closest("[data-xp-ev]");
+    if (!button) return;
+    const stat = button.dataset.xpEv;
+    if (stat === "all") evTargets = [];
+    else if (evTargets.includes(stat)) evTargets = evTargets.filter(item => item !== stat);
+    else if (evTargets.length < 2) evTargets = [...evTargets, stat];
+    try { localStorage.setItem(XP_EV_STORAGE_KEY, JSON.stringify(evTargets)); }
+    catch { /* Le filtre reste actif dans cette session. */ }
+    refreshEvChips();
+    render();
+  });
   attackSelect.addEventListener("change", render);
   levelInput.addEventListener("input", render);
   periodInput.addEventListener("change", render);
   seasonInput.addEventListener("change", render);
   suitableOnly.addEventListener("change", render);
   unlockedOnly.addEventListener("change", () => {
-    if (region === "all") return;
-    filterByRegion[region] = unlockedOnly.checked;
-    saveXpSettings(XP_FILTER_STORAGE_KEY, filterByRegion);
+    try { localStorage.setItem(XP_UNLOCKED_ACTIVE_KEY, String(unlockedOnly.checked)); }
+    catch { /* Filtre actif durant cette session. */ }
     render();
   });
   zoneSearch.addEventListener("input", filterZoneChoices);
   zonesAll.addEventListener("click", () => {
-    if (region === "all") return;
-    saveZones(zonesByRegion.get(region) || []);
-    zoneChoices.querySelectorAll("input").forEach(box => { box.checked = true; });
+    saveZones(zonesByRegion.get(editorRegion) || []);
+    zonePicker.refresh();
   });
   zonesNone.addEventListener("click", () => {
-    if (region === "all") return;
     saveZones([]);
-    zoneChoices.querySelectorAll("input").forEach(box => { box.checked = false; });
+    zonePicker.refresh();
+  });
+  zoneRegionSelect.addEventListener("change", () => {
+    if (!selectedRegions.has(zoneRegionSelect.value)) return;
+    editorRegion = zoneRegionSelect.value;
+    refreshUnlocked();
   });
   regionFilters.addEventListener("click", event => {
     const button = event.target.closest("[data-xp-region]");
     if (!button) return;
-    region = button.dataset.xpRegion;
-    regionFilters.querySelectorAll("[data-xp-region]").forEach(btn => btn.classList.toggle("active", btn === button));
+    const r = button.dataset.xpRegion;
+    if (r === "all") { selectedRegions = new Set(REGION_NAMES); explicitAllRegions = true; }
+    else if (explicitAllRegions) { selectedRegions = new Set([r]); explicitAllRegions = false; }
+    else if (selectedRegions.has(r)) {
+      if (selectedRegions.size > 1) selectedRegions.delete(r); // Toujours au moins une région.
+    } else selectedRegions.add(r);
+    if (r !== "all" && selectedRegions.has(r)) editorRegion = r;
+    try { localStorage.setItem(XP_REGIONS_STORAGE_KEY, JSON.stringify([...selectedRegions])); }
+    catch { /* Filtre actif durant cette session. */ }
+    refreshRegionChips();
     refreshUnlocked();
     render();
   });
@@ -521,6 +673,7 @@
   const previousSwitchSearchMode = switchSearchMode;
   switchSearchMode = function (mode) {
     if (mode !== "xp") {
+      if (currentSearchMode === "xp") xpReturnScrollY = window.scrollY;
       appShell.classList.remove("xp-mode");
       section.classList.add("hidden");
       previousSwitchSearchMode(mode);
@@ -539,7 +692,13 @@
     trainerEmptyState.classList.add("hidden");
     section.classList.remove("hidden");
     refreshUnlocked();
-    if (chosen) render();
+    // Preserve expanded results, the loaded batches and their current scroll on return.
+    if (chosen && !xpHasRendered) render();
+    if (xpReturnScrollY !== null) {
+      requestAnimationFrame(() => requestAnimationFrame(() =>
+        window.scrollTo({ top: xpReturnScrollY, behavior: "instant" })
+      ));
+    }
   };
 
   document.addEventListener("dex:languagechange", () => {
@@ -549,10 +708,12 @@
     });
     if (chosen) input.value = label(chosen);
     updateAttackType();
+    refreshEvChips();
     refreshUnlocked();
     render();
   });
-  regionFilters.querySelectorAll("[data-xp-region]").forEach(b => b.classList.toggle("active", b.dataset.xpRegion === region));
+  refreshEvChips();
+  refreshRegionChips();
   refreshUnlocked();
   updateAttackType();
   showMessage(txt("select"));

@@ -25,6 +25,19 @@
   const evZoneSelectList = document.querySelector("#evZoneSelectList");
   const evZonesAll = document.querySelector("#evZonesAll");
   const evZonesNone = document.querySelector("#evZonesNone");
+  const evZonePicker = window.DexZoneProgress.createPicker({
+    list: evZoneSelectList,
+    normalButton: document.querySelector("#evZoneViewNormal"),
+    simpleButton: document.querySelector("#evZoneViewSimple"),
+    storageKey: "dexCompagnonEvZoneViewV1",
+    getSelected: () => currentUnlockedSet(),
+    getLabel: (region, zone) => evLocationName(region, zone),
+    onSelectionChange: (zones) => {
+      saveUnlockedSet(evRegion, zones);
+      updateProgressCount();
+      if (isUnlockedFilterEnabled()) renderEvSearch();
+    }
+  });
   const evPeriodFilters = document.querySelector("#evPeriodFilters");
   const evSeasonFilters = document.querySelector("#evSeasonFilters");
   const evSeasonAuto = document.querySelector("#evSeasonAuto");
@@ -101,7 +114,8 @@
     species: "of species", usefulWeight: "useful weight",
     good: "✓ Useful", mixedState: "⚠ Mixed", parasiteState: "✕ Unwanted",
     excellent: "Excellent", veryGood: "Very good", goodScore: "Good", fair: "Fair",
-    poor: "Poor", veryPoor: "Very poor"
+    poor: "Poor", veryPoor: "Very poor",
+    pin: "Pin this area to the top", unpin: "Unpin this area"
   };
   const EN_METHODS = {
     "Herbes": "Grass", "Herbes sombres": "Dark grass", "Grotte": "Cave",
@@ -370,18 +384,7 @@
   }
 
   function filterZoneChoices() {
-    if (!evZoneSearch || !evZoneSelectList) return;
-
-    const query = normalizeForSearch(evZoneSearch.value);
-
-    evZoneSelectList.querySelectorAll(".ev-zone-choice").forEach((label) => {
-      const originalName = normalizeForSearch(label.dataset.zone);
-      const localizedName = normalizeForSearch(evLocationName(evRegion, label.dataset.zone));
-      label.classList.toggle(
-        "hidden-by-search",
-        Boolean(query) && !originalName.includes(query) && !localizedName.includes(query)
-      );
-    });
+    evZonePicker.filter(evZoneSearch?.value || "");
   }
 
   function renderProgressionSelector() {
@@ -396,7 +399,8 @@
       evProgressPlaceholder.classList.remove("hidden");
       evProgressContent.classList.add("hidden");
       evUnlockedOnly.checked = false;
-      evZoneSelectList.innerHTML = "";
+      evZonePicker.filter("");
+      evZonePicker.render("all", []);
       return;
     }
 
@@ -413,40 +417,10 @@
         `${regionLabel(evRegion)} — ${evText("savedRegion")}`;
     }
 
-    evZoneSelectList.innerHTML = "";
-
-    zones.forEach((zone) => {
-      const label = document.createElement("label");
-      label.className = "ev-zone-choice";
-      label.dataset.zone = zone;
-
-      const input = document.createElement("input");
-      input.type = "checkbox";
-      input.value = zone;
-      input.checked = unlocked.has(zone);
-
-      const text = document.createElement("span");
-      text.textContent = evLocationName(evRegion, zone);
-      text.title = text.textContent;
-
-      input.addEventListener("change", () => {
-        const next = currentUnlockedSet();
-
-        if (input.checked) next.add(zone);
-        else next.delete(zone);
-
-        saveUnlockedSet(evRegion, [...next]);
-        updateProgressCount();
-
-        if (isUnlockedFilterEnabled()) renderEvSearch();
-      });
-
-      label.appendChild(input);
-      label.appendChild(text);
-      evZoneSelectList.appendChild(label);
-    });
-
     if (evZoneSearch) evZoneSearch.value = "";
+    evZonePicker.filter("");
+    evZonePicker.render(evRegion, zones);
+
     updateProgressCount();
   }
 
@@ -729,12 +703,43 @@
     return evText("parasiteState");
   }
 
+  // The EV and XP panels keep their own expanded cards, scroll positions and pinned area.
+  // No saved search filters are changed when a card is pinned or opened.
+  const evOpenZoneKeys = new Set();
+  let evPinnedKey = null;
+  let evHasRendered = false;
+  let evReturnScrollY = null;
+  const evZoneKey = (group) => JSON.stringify([group.region, group.zone, group.method]);
+
+  function reorderEvCards() {
+    const cards = [...evResults.querySelectorAll(":scope > .ev-zone-card")];
+    cards.sort((a, b) =>
+      Number(b.dataset.zoneKey === evPinnedKey) - Number(a.dataset.zoneKey === evPinnedKey) ||
+      Number(a.dataset.originalRank) - Number(b.dataset.originalRank)
+    );
+    cards.forEach(card => {
+      const pinned = card.dataset.zoneKey === evPinnedKey;
+      card.classList.toggle("zone-pinned", pinned);
+      const button = card.querySelector(".zone-pin-btn");
+      if (button) {
+        button.setAttribute("aria-pressed", String(pinned));
+        button.setAttribute("aria-label", evText(pinned ? "unpin" : "pin"));
+        button.title = evText(pinned ? "unpin" : "pin");
+      }
+      evResults.appendChild(card);
+    });
+  }
+
   function createZoneCard(group, rank) {
     const details = document.createElement("details");
     details.className = "ev-zone-card";
+    const zoneKey = evZoneKey(group);
+    details.dataset.zoneKey = zoneKey;
+    details.dataset.originalRank = String(rank);
+    const pinned = zoneKey === evPinnedKey;
+    details.open = evOpenZoneKeys.has(zoneKey) || (!evHasRendered && rank === 0);
 
     if (rank < 3) details.classList.add("recommended");
-    if (rank === 0) details.open = true;
 
     const relevantPercent = Math.round(group.usefulSpeciesRatio * 100);
 
@@ -743,6 +748,7 @@
       <div class="ev-zone-title">
         <div class="ev-zone-title-row">
           <h3>${rank + 1}. ${escapeHtml(evLocationName(group.region, group.zone))}</h3>
+          <button type="button" class="zone-pin-btn" aria-pressed="${pinned}" aria-label="${escapeHtml(evText(pinned ? "unpin" : "pin"))}" title="${escapeHtml(evText(pinned ? "unpin" : "pin"))}">📌</button>
           <span class="ev-zone-region">${escapeHtml(regionLabel(group.region))}</span>
           <span class="ev-zone-method">${escapeHtml(evMethodLabel(group.method))}</span>
         </div>
@@ -761,6 +767,12 @@
     `;
 
     details.appendChild(summary);
+    summary.querySelector(".zone-pin-btn").addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      evPinnedKey = evPinnedKey === zoneKey ? null : zoneKey;
+      reorderEvCards();
+    });
 
     // Une fiche fermée n'a pas besoin de ses lignes Pokémon dans le DOM.
     // On construit son contenu lors de la première ouverture seulement.
@@ -851,12 +863,17 @@
     }
 
     if (details.open) {
+      evOpenZoneKeys.add(zoneKey);
       populateBody();
-    } else {
-      details.addEventListener("toggle", () => {
-        if (details.open) populateBody();
-      }, { once: true });
     }
+    details.addEventListener("toggle", () => {
+      if (details.open) {
+        evOpenZoneKeys.add(zoneKey);
+        if (!details.querySelector(".ev-zone-body")) populateBody();
+      } else {
+        evOpenZoneKeys.delete(zoneKey);
+      }
+    });
     return details;
   }
 
@@ -940,6 +957,8 @@
       fragment.appendChild(createZoneCard(group, index));
     });
     evResults.appendChild(fragment);
+    evHasRendered = true;
+    reorderEvCards();
   }
 
   function setEvRegion(region) {
@@ -1062,6 +1081,7 @@
 
   switchSearchMode = function(mode) {
     if (mode !== "ev") {
+      if (currentSearchMode === "ev") evReturnScrollY = window.scrollY;
       appShell.classList.remove("ev-mode");
       evSection.classList.add("hidden");
       previousSwitchSearchMode(mode);
@@ -1086,7 +1106,14 @@
     trainerCard.classList.add("hidden");
     trainerEmptyState.classList.add("hidden");
 
-    renderEvSearch();
+    // Search settings are already re-rendered by their own listeners. Do not
+    // destroy open panels simply because a Pokémon sheet was visited.
+    if (!evHasRendered) renderEvSearch();
+    if (evReturnScrollY !== null) {
+      requestAnimationFrame(() => requestAnimationFrame(() =>
+        window.scrollTo({ top: evReturnScrollY, behavior: "instant" })
+      ));
+    }
   };
 
   // Choix utile par défaut : Attaque + Vitesse.
@@ -1119,14 +1146,9 @@
       }
       updateProgressCount();
     }
-    // Keep the original checkbox values and data-zone attributes for saved progress.
-    evZoneSelectList?.querySelectorAll(".ev-zone-choice").forEach((label) => {
-      const span = label.querySelector("span");
-      if (span) {
-        span.textContent = evLocationName(evRegion, label.dataset.zone);
-        span.title = span.textContent;
-      }
-    });
+    if (evRegion !== "all") {
+      evZonePicker.render(evRegion, regionZones(evRegion));
+    }
     filterZoneChoices();
     renderEvSearch();
   });

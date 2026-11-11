@@ -98,7 +98,181 @@
     numeric: true, sensitivity: "base"
   });
 
+  // Dernier lieu de chaque étape de l'aventure dans l'itinéraire ci-dessus.
+  // Les lieux à accès multiple ou facultatif restent approximatifs : ce classement
+  // est un outil de sélection, pas une validation de badges en jeu.
+  const STAGE_ENDS = {
+    kanto: ["Forêt de Jade", "Route 25", "Cave Taupiqueur", "Céladopole",
+      "Parc Safari", "Route 15", "Manoir Pokémon", "Bois Baies", "Route Victoire"],
+    johto: ["Tour Chétiflor", "Puits Ramoloss", "Parc Naturel", "Tour Cendrée",
+      "Grotte Falaise", "Parc Safari", "Repaire Rocket", "Antre du Dragon", "Route Victoire"],
+    hoenn: ["Tunnel Mérazon", "Grotte Granite", "Route 117", "Site Météore",
+      "Tour Mirage", "Route 120", "Grotte Tréfonds", "Grotte Origine", "Route Victoire"],
+    sinnoh: ["Mine Charbourg", "Vieux Château", "Route 208", "Route 215",
+      "Grand Marais", "Île de Fer", "Lac Savoir", "Rivamar", "Ligue Pokémon"],
+    unys: ["Vestiges du Rêve", "Veine Souterraine", "Château Enfoui", "Route 16",
+      "Hangar Frigorifique", "Tour des Cieux", "Tour Dragospire", "Route 9", "Salle Épreuve"]
+  };
+  const COLORS = ["#d9b84b", "#50ac79", "#629bdc", "#a787d8", "#d88a57",
+    "#42aeb0", "#df7998", "#b7a359", "#799dce", "#a5a6ac", "#bcb3a5"];
+
+  function stages(region, zones) {
+    const order = ranks[region] || new Map();
+    const ends = (STAGE_ENDS[region] || []).map(place => order.get(key(place)));
+    const result = Array.from({length:11}, (_, index) => ({ index, zones: [], color: COLORS[index] }));
+    zones.forEach(zone => {
+      const index = order.get(key(zone));
+      const stage = index === undefined ? 10 : ends.findIndex(end => index <= end);
+      result[stage < 0 ? 9 : stage].zones.push(zone);
+    });
+    return result.filter(stage => stage.zones.length);
+  }
+
+  // Composant partagé par EV et XP. Chaque onglet garde son propre stockage.
+  function createPicker({ list, normalButton, simpleButton, storageKey, getSelected,
+    getLabel, onSelectionChange }) {
+    let mode = "simple";
+    try { if (localStorage.getItem(storageKey) === "normal") mode = "normal"; }
+    catch { /* Stockage éventuellement interdit. */ }
+    let region = "all";
+    let zones = [];
+    let query = "";
+    const openedByRegion = new Map();
+    const english = () => window.DexI18n?.language === "en";
+    const normalize = value => key(value);
+
+    function stageName(index) {
+      if (index === 0) return english() ? "Start → Badge 1" : "Début → Badge 1";
+      if (index >= 1 && index <= 7) return english()
+        ? `Badge ${index} → Badge ${index + 1}` : `Badge ${index} → Badge ${index + 1}`;
+      if (index === 8) return english() ? "Badge 8 → League" : "Badge 8 → Ligue";
+      if (index === 9) return english() ? "After the League" : "Après la Ligue";
+      return english() ? "Other / variable access" : "Autres / accès variable";
+    }
+    function makeRow(zone) {
+      const row = document.createElement("label");
+      row.className = "ev-zone-choice";
+      row.dataset.zone = zone;
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.value = zone;
+      const text = document.createElement("span");
+      text.textContent = getLabel(region, zone);
+      text.title = text.textContent;
+      checkbox.addEventListener("change", () => changeSelection([zone], checkbox.checked));
+      row.append(checkbox, text);
+      return row;
+    }
+    function changeSelection(changed, checked) {
+      const next = new Set(getSelected());
+      changed.forEach(zone => checked ? next.add(zone) : next.delete(zone));
+      onSelectionChange([...next]);
+      refresh();
+    }
+    function refresh() {
+      const selected = new Set(getSelected());
+      list.querySelectorAll(".ev-zone-choice").forEach(row => {
+        row.querySelector("input").checked = selected.has(row.dataset.zone);
+      });
+      list.querySelectorAll(".zone-stage").forEach(group => {
+        const items = [...group.querySelectorAll(".ev-zone-choice")];
+        const checked = items.filter(row => selected.has(row.dataset.zone)).length;
+        const box = group.querySelector(".zone-stage-check");
+        box.checked = checked === items.length;
+        box.indeterminate = checked > 0 && checked < items.length;
+        const count = group.querySelector(".zone-stage-count");
+        count.textContent = `${checked}/${items.length} ${english() ? "areas selected" : "lieux sélectionnés"}`;
+      });
+    }
+    function applyFilter(value) {
+      query = normalize(value);
+      list.querySelectorAll(".ev-zone-choice").forEach(row => {
+        const match = !query || normalize(row.dataset.zone).includes(query) ||
+          normalize(getLabel(region, row.dataset.zone)).includes(query);
+        row.classList.toggle("hidden-by-search", !match);
+      });
+      list.querySelectorAll(".zone-stage").forEach(group => {
+        const matches = !!group.querySelector(".ev-zone-choice:not(.hidden-by-search)");
+        group.classList.toggle("hidden-by-search", !matches);
+        const details = group.querySelector(".zone-stage-details");
+        details.open = query ? matches : (openedByRegion.get(region)?.has(group.dataset.stage) || false);
+      });
+    }
+    function render(nextRegion, nextZones) {
+      // Garder les groupes manuellement ouverts, sauf si une recherche les a dépliés.
+      if (!query && mode === "simple" && region === nextRegion) {
+        const opened = new Set([...list.querySelectorAll(".zone-stage-details[open]")]
+          .map(details => details.closest(".zone-stage").dataset.stage));
+        if (list.querySelector(".zone-stage")) openedByRegion.set(region, opened);
+      }
+      region = nextRegion;
+      zones = [...nextZones];
+      list.replaceChildren();
+      list.classList.toggle("zone-view-simplified", mode === "simple");
+      normalButton.classList.toggle("active", mode === "normal");
+      simpleButton.classList.toggle("active", mode === "simple");
+      normalButton.setAttribute("aria-pressed", String(mode === "normal"));
+      simpleButton.setAttribute("aria-pressed", String(mode === "simple"));
+      if (mode === "normal") {
+        zones.forEach(zone => list.appendChild(makeRow(zone)));
+      } else {
+        stages(region, zones).forEach(stage => {
+          const group = document.createElement("div");
+          group.className = "zone-stage";
+          group.dataset.stage = String(stage.index);
+          group.style.setProperty("--stage-border", stage.color);
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.className = "zone-stage-check";
+          checkbox.setAttribute("aria-label", `${english() ? "Select all areas in" : "Tout cocher dans"} ${stageName(stage.index)}`);
+          checkbox.addEventListener("change", () => changeSelection(stage.zones, checkbox.checked));
+          const details = document.createElement("details");
+          const stageRegion = region;
+          details.className = "zone-stage-details";
+          const summary = document.createElement("summary");
+          const heading = document.createElement("span");
+          heading.className = "zone-stage-heading";
+          const title = document.createElement("strong");
+          title.textContent = stageName(stage.index);
+          const count = document.createElement("small");
+          count.className = "zone-stage-count";
+          heading.append(title, count);
+          summary.appendChild(heading);
+          const locations = document.createElement("div");
+          locations.className = "zone-stage-places";
+          stage.zones.forEach(zone => locations.appendChild(makeRow(zone)));
+          details.append(summary, locations);
+          details.open = openedByRegion.get(region)?.has(String(stage.index)) || false;
+          details.addEventListener("toggle", () => {
+            if (query || region !== stageRegion || !group.isConnected) return;
+            // Dépliage temporaire pendant une recherche ou ancien groupe démonté.
+            const opened = openedByRegion.get(stageRegion) || new Set();
+            if (details.open) opened.add(group.dataset.stage);
+            else opened.delete(group.dataset.stage);
+            openedByRegion.set(stageRegion, opened);
+          });
+          group.append(checkbox, details);
+          list.appendChild(group);
+        });
+      }
+      refresh();
+      applyFilter(query);
+    }
+    function setMode(next) {
+      if (next === mode) return;
+      mode = next;
+      try { localStorage.setItem(storageKey, mode); }
+      catch { /* Mode toujours actif pendant la visite. */ }
+      render(region, zones);
+    }
+    normalButton.addEventListener("click", () => setMode("normal"));
+    simpleButton.addEventListener("click", () => setMode("simple"));
+    return { render, refresh, filter: applyFilter };
+  }
+
   window.DexZoneProgress = Object.freeze({
+    stages,
+    createPicker,
     sort(region, zones) {
       const order = ranks[region];
       return [...zones].sort((a, b) => {

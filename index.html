@@ -27,7 +27,7 @@
               <option value="en">🇬🇧 English</option>
             </select>
           </label>
-          <span class="version">V2.1 β4</span>
+          <span class="version">V2.1 β7</span>
         </div>
       </header>
 
@@ -239,6 +239,10 @@
 
             <details class="ev-progress-details" id="evProgressDetails">
               <summary data-i18n="ev.routes">Choisir mes routes / emplacements accessibles</summary>
+              <div class="zone-view-switch" role="group" data-i18n-aria-label="zones.viewLabel" aria-label="Affichage des zones">
+                <button type="button" id="evZoneViewNormal" data-i18n="zones.normal" aria-pressed="false">Normal</button>
+                <button type="button" id="evZoneViewSimple" data-i18n="zones.simple" aria-pressed="true">Simplifié</button>
+              </div>
 
               <div class="ev-progress-tools">
                 <input
@@ -310,15 +314,31 @@
           <div class="ev-filter-block">
             <div class="ev-filter-title-row">
               <strong data-i18n="common.region">Région</strong>
-              <small data-i18n="xp.regionHelp">Filtre propre à la recherche XP</small>
+              <small data-i18n="xp.regionHelp">Sélectionne une ou plusieurs régions (Toutes = les cinq régions).</small>
             </div>
-            <div class="ev-filter-chips" id="xpRegionFilters">
-              <button type="button" class="ev-filter-chip active" data-xp-region="all" data-i18n="common.all">Toutes</button>
-              <button type="button" class="ev-filter-chip" data-xp-region="kanto">Kanto</button>
-              <button type="button" class="ev-filter-chip" data-xp-region="hoenn">Hoenn</button>
-              <button type="button" class="ev-filter-chip" data-xp-region="sinnoh">Sinnoh</button>
-              <button type="button" class="ev-filter-chip" data-xp-region="unys" data-i18n="region.unys">Unys</button>
-              <button type="button" class="ev-filter-chip" data-xp-region="johto">Johto</button>
+            <div class="ev-filter-chips" id="xpRegionFilters" role="group" aria-label="Régions XP" data-i18n-aria-label="xp.regionAria">
+              <button type="button" class="ev-filter-chip active" data-xp-region="all" aria-pressed="true" data-i18n="common.all">Toutes</button>
+              <button type="button" class="ev-filter-chip active" data-xp-region="kanto" aria-pressed="true">Kanto</button>
+              <button type="button" class="ev-filter-chip active" data-xp-region="hoenn" aria-pressed="true">Hoenn</button>
+              <button type="button" class="ev-filter-chip active" data-xp-region="sinnoh" aria-pressed="true">Sinnoh</button>
+              <button type="button" class="ev-filter-chip active" data-xp-region="unys" aria-pressed="true" data-i18n="region.unys">Unys</button>
+              <button type="button" class="ev-filter-chip active" data-xp-region="johto" aria-pressed="true">Johto</button>
+            </div>
+          </div>
+          <div class="ev-filter-block xp-ev-filter-block">
+            <div class="ev-filter-title-row">
+              <strong data-i18n="xp.evFilterTitle">EV à entraîner en même temps (facultatif)</strong>
+              <small data-i18n="xp.evFilterHelp">Choisis jusqu'à deux EV. Les zones utiles aux deux sont privilégiées ; les autres rencontres restent visibles.</small>
+              <small class="xp-ev-selection-count" id="xpEvSelectionCount">0/2 EV</small>
+            </div>
+            <div class="ev-filter-chips xp-ev-filter-chips" id="xpEvFilters" role="group" aria-label="EV à entraîner" data-i18n-aria-label="xp.evFilterAria">
+              <button type="button" class="ev-filter-chip active" data-xp-ev="all" aria-pressed="true" data-i18n="common.all">Tous</button>
+              <button type="button" class="ev-filter-chip" data-xp-ev="PV" aria-pressed="false" data-i18n="stat.hp">PV</button>
+              <button type="button" class="ev-filter-chip" data-xp-ev="Attaque" aria-pressed="false" data-i18n="stat.attack">Attaque</button>
+              <button type="button" class="ev-filter-chip" data-xp-ev="Défense" aria-pressed="false" data-i18n="stat.defense">Défense</button>
+              <button type="button" class="ev-filter-chip" data-xp-ev="Attaque Spéciale" aria-pressed="false" data-i18n="stat.spattack">Att. Spé.</button>
+              <button type="button" class="ev-filter-chip" data-xp-ev="Défense Spéciale" aria-pressed="false" data-i18n="stat.spdefense">Déf. Spé.</button>
+              <button type="button" class="ev-filter-chip" data-xp-ev="Vitesse" aria-pressed="false" data-i18n="stat.speed">Vitesse</button>
             </div>
           </div>
           <div class="ev-filter-block">
@@ -373,9 +393,14 @@
         <!-- Progression XP : indépendante de la progression de Recherche EV. -->
         <div class="ev-progress-panel xp-progress-panel" id="xpProgressPanel">
           <div class="ev-progress-placeholder" id="xpProgressPlaceholder" data-i18n="xp.chooseRegion">
-            Choisis une région précise pour gérer tes zones accessibles en Recherche XP.
+            Choisis tes régions ci-dessus, puis configure leurs routes ici.
           </div>
           <div class="ev-progress-content hidden" id="xpProgressContent">
+            <div class="xp-zone-region-row hidden" id="xpZoneRegionRow">
+              <label for="xpZoneRegionSelect" data-i18n="xp.zoneRegionLabel">Région à configurer</label>
+              <select id="xpZoneRegionSelect" aria-label="Région à configurer" data-i18n-aria-label="xp.zoneRegionLabel"></select>
+              <small data-i18n="xp.zoneRegionHelp">Les routes sont enregistrées séparément pour chaque région sélectionnée.</small>
+            </div>
             <div class="ev-progress-head">
               <label class="ev-progress-toggle">
                 <input type="checkbox" id="xpUnlockedOnly">
@@ -388,6 +413,10 @@
             </div>
             <details class="ev-progress-details" id="xpProgressDetails">
               <summary data-i18n="xp.routes">Choisir mes routes / emplacements accessibles pour l'XP</summary>
+              <div class="zone-view-switch" role="group" data-i18n-aria-label="zones.viewLabel" aria-label="Affichage des zones">
+                <button type="button" id="xpZoneViewNormal" data-i18n="zones.normal" aria-pressed="false">Normal</button>
+                <button type="button" id="xpZoneViewSimple" data-i18n="zones.simple" aria-pressed="true">Simplifié</button>
+              </div>
               <div class="ev-progress-tools">
                 <input type="search" id="xpZoneSearch" data-i18n-placeholder="xp.zonePlaceholder"
                   placeholder="Rechercher une route, une ville, une grotte..." autocomplete="off">
@@ -410,7 +439,7 @@
         <div class="ev-search-summary" id="xpSearchSummary" role="status" aria-live="polite">
           Choisis un Pokémon pour lancer l'analyse.
         </div>
-        <p class="xp-disclaimer" data-i18n="xp.disclaimer">Le pourcentage compte les espèces présentes (pas leur fréquence réelle). Les alertes ⚠ signalent les faiblesses de type potentielles, sans vérifier les attaques connues. L'EXP de base n'est pas le gain réel d'un combat.</p>
+        <p class="xp-disclaimer" data-i18n="xp.disclaimer">Le pourcentage compte les espèces présentes (pas leur fréquence réelle). Les alertes ⚠ signalent les faiblesses de type potentielles, sans vérifier les attaques connues. L'EXP de base n'est pas le gain réel d'un combat. Les EV indiqués correspondent aux données des Pokémon sauvages, hors bonus.</p>
         <div class="xp-results" id="xpResults"></div>
         <button type="button" class="xp-more hidden" id="xpShowMore" data-i18n="xp.more">Afficher plus de zones</button>
       </section>

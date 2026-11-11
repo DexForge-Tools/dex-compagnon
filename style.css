@@ -2595,6 +2595,9 @@ h1 {
 .xp-zone-track > span { display: block; height: 100%; border-radius: inherit; background: #63d68f; }
 .xp-zone-info > small { display: block; color: var(--muted); font-size: .75rem; }
 .xp-zone-info > small strong { color: var(--text); }
+.xp-ev-zone-count { margin-top: 5px; color: #b9d9e7 !important; }
+.xp-ev-filter-chips { gap: 7px; }
+.xp-ev-filter-chips .ev-filter-chip { white-space: nowrap; }
 .xp-threat-count { color: #f2bd79; font-weight: 800; }
 .xp-score { min-width: 122px; display: flex; align-items: flex-end; flex-direction: column; gap: 2px; text-align: right; }
 .xp-score > strong { font-size: 1.5rem; color: #77e3a1; font-variant-numeric: tabular-nums; }
@@ -2605,7 +2608,7 @@ h1 {
 .xp-species-list { display: grid; gap: 6px; }
 .xp-species-row {
   display: grid;
-  grid-template-columns: minmax(170px, 1fr) minmax(0, 1.55fr);
+  grid-template-columns: minmax(180px, 1.1fr) minmax(145px, .9fr) minmax(0, 1.55fr);
   align-items: center;
   gap: 10px;
   min-width: 0;
@@ -2619,6 +2622,15 @@ h1 {
 .xp-species-name > span { display: flex; flex-direction: column; min-width: 0; gap: 3px; }
 .xp-species-name strong { overflow-wrap: anywhere; font-size: .83rem; }
 .xp-species-name small { color: var(--muted); font-size: .68rem; }
+.xp-ev-yields { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; min-width: 0; }
+.xp-ev-badge {
+  display: inline-flex; align-items: center; border: 1px solid #356c79;
+  border-radius: 7px; background: rgba(37, 109, 126, .17); color: #90d9e6;
+  padding: 4px 7px; font-size: .74rem; font-weight: 800;
+}
+.xp-ev-badge.target { border-color: #55a976; background: rgba(43, 137, 85, .24); color: #a0efb9; }
+.xp-ev-badge.off-target { opacity: .58; }
+.xp-ev-missing { color: var(--muted); font-size: .7rem; }
 .xp-species-info { display: flex; justify-content: flex-end; flex-wrap: wrap; align-items: center; gap: 6px; }
 .xp-match { border: 1px solid #323d4a; padding: 5px 7px; border-radius: 8px; white-space: nowrap; font-size: .76rem; font-weight: 800; }
 .xp-match.good { border-color: #356b50; color: #87e7ac; background: #19352a; }
@@ -2682,6 +2694,7 @@ h1 {
   .xp-options { grid-template-columns: 1fr; }
   .xp-species-row { grid-template-columns: minmax(0, 1fr); gap: 7px; }
   .xp-species-info { justify-content: flex-start; }
+  .xp-ev-yields { padding-left: 47px; }
 }
 @media (max-width: 520px) {
   .xp-identity-controls { grid-template-columns: minmax(0, 1fr); }
@@ -2697,3 +2710,192 @@ h1 {
 
 /* Les routes restent sur une liste compacte, ordonnée par progression. */
 .zone-progress-note { margin: 1px 0 8px; }
+
+/* =========================================================
+   V2.1 β5 — Affichage Normal / Simplifié des zones EV et XP
+   ========================================================= */
+.ev-progress-details { position: relative; }
+.ev-progress-details > summary {
+  padding-right: 158px;
+  min-height: 29px;
+  display: list-item;
+}
+.zone-view-switch {
+  position: absolute;
+  top: 5px;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid #3b4553;
+  border-radius: 8px;
+  background: #151920;
+}
+.zone-view-switch button {
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  padding: 5px 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: .67rem;
+  font-weight: 750;
+}
+.zone-view-switch button.active {
+  background: rgba(93, 178, 255, .18);
+  color: var(--text);
+}
+.zone-view-switch button:focus-visible,
+.zone-stage-details > summary:focus-visible,
+.zone-stage-check:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ev-zone-select-list.zone-view-simplified {
+  display: flex;
+  flex-direction: column;
+  max-height: 365px;
+  gap: 7px;
+}
+.zone-stage {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  border: 1px solid var(--stage-border);
+  border-radius: 10px;
+  background: rgba(18, 22, 30, .82);
+  padding: 8px 10px;
+  min-width: 0;
+}
+.zone-stage.hidden-by-search { display: none; }
+.zone-stage-check {
+  flex: 0 0 auto;
+  margin-top: 5px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.zone-stage-details { flex: 1; min-width: 0; }
+.zone-stage-details > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 0 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+.zone-stage-details > summary::-webkit-details-marker { display: none; }
+.zone-stage-details > summary::after {
+  content: '▸';
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1;
+}
+.zone-stage-details[open] > summary::after { content: '▾'; }
+.zone-stage-heading { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.zone-stage-heading strong { font-size: .73rem; font-weight: 800; }
+.zone-stage-count { font-size: .62rem; color: var(--muted); }
+.zone-stage-places {
+  margin-top: 9px;
+  border-top: 1px solid rgba(255, 255, 255, .09);
+  padding-top: 9px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+@media (max-width: 690px) {
+  .zone-stage-places { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 490px) {
+  .ev-progress-details > summary { padding-right: 0; }
+  .zone-view-switch { position: static; margin-top: 6px; }
+  .zone-stage-places { grid-template-columns: 1fr; }
+  #evZoneSearch, #xpZoneSearch {
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+}
+
+/* V2.1 β7 — Multi-sélection XP des EV et des régions. */
+.xp-ev-selection-count { font-variant-numeric: tabular-nums; color: #a0efb9 !important; white-space: nowrap; }
+.xp-ev-filter-chips .ev-filter-chip:disabled {
+  cursor: not-allowed;
+  opacity: .36;
+  border-color: #303744;
+}
+.xp-zone-region-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px 11px;
+  padding: 2px 0 11px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.xp-zone-region-row.hidden { display: none; }
+.xp-zone-region-row label { font-size: .78rem; font-weight: 800; }
+.xp-zone-region-row select {
+  padding: 7px 28px 7px 9px;
+  border: 1px solid #3a4c61;
+  border-radius: 8px;
+  background: #111821;
+  color: var(--text);
+  font: inherit;
+  font-size: .82rem;
+  min-width: 130px;
+}
+.xp-zone-region-row select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.xp-zone-region-row small { font-size: .69rem; color: var(--muted); }
+
+/* V2.1 β8 — Zone pins and navigable XP Pokémon, on desktop and mobile. */
+.zone-pin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 27px;
+  height: 27px;
+  padding: 0;
+  border: 1px solid #384455;
+  border-radius: 7px;
+  background: #151920;
+  color: #b9c9d8;
+  cursor: pointer;
+  font-size: .8rem;
+  opacity: .68;
+}
+.zone-pin-btn:hover, .zone-pin-btn:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.zone-pin-btn[aria-pressed="true"] {
+  opacity: 1;
+  background: #3b321f;
+  border-color: #dbb866;
+  color: #ffe6a5;
+}
+.ev-zone-card.zone-pinned, .xp-zone-card.zone-pinned {
+  border-color: #dbb866;
+  box-shadow: inset 3px 0 0 #dbb866;
+}
+.xp-pokemon-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.xp-pokemon-link img { object-fit: contain; flex: 0 0 auto; }
+.xp-pokemon-link > span { display: flex; flex-direction: column; min-width: 0; gap: 3px; }
+.xp-pokemon-link strong { overflow-wrap: anywhere; font-size: .83rem; }
+.xp-pokemon-link small { color: var(--muted); font-size: .68rem; }
+.xp-pokemon-link:hover strong { color: var(--accent); text-decoration: underline; }
+.xp-pokemon-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
